@@ -182,9 +182,15 @@ not - a typo check before you press Enter.
 | `pull` | `git pull` |
 | `m` | `git switch main` |
 | `cc` | `claude --dangerously-skip-permissions` |
-| `co` | `codex --full-auto` |
-| `fm` | FirstMate in the workspace (a function, not an alias) |
-| `claudex` | Claude via the local proxy on port 8317 |
+| `co` | `codex --sandbox workspace-write --ask-for-approval never` |
+| `fm` | FirstMate in the workspace (a function) |
+| `claudex` | Claude on `gpt-5.6-sol` via the local proxy |
+| `aim <model>` | Claude on any proxied model, no picker |
+| `openrouter` | fuzzy picker over all ~349 proxied models |
+
+Note on `co`: codex 0.145 removed the old `--full-auto` flag. The two flags above
+are the same behaviour - write access limited to the working directory, no
+approval prompts.
 
 Note on `add`: it stages **everything** changed, not just one file. Check
 `git status` first if the tree is messy.
@@ -301,6 +307,61 @@ It handles routine things itself and comes to you for the real decisions.
 
 A **second mate** is a FirstMate with its own separate area, for a distinct
 domain of work. You do not have one - with a single project you do not need one.
+
+---
+
+# 5b. Running any model - the local proxy
+
+`cli-proxy-api` runs as a background service on `127.0.0.1:8317` and serves
+**~349 models**: all 345 OpenRouter models plus your Codex ones. Config lives at
+`/opt/homebrew/etc/cliproxyapi.conf`.
+
+This is completely independent of herdr and FirstMate. It works from any plain
+terminal.
+
+```sh
+openrouter                    # fuzzy picker over every model (fzf)
+openrouter deepseek           # jump straight to one
+openrouter grok-4.5           # Grok, via OpenRouter
+openrouter --list             # print all names
+openrouter --refresh          # re-fetch after OpenRouter adds models
+aim gemini-3.6-flash          # same, no picker
+```
+
+Inside Claude, `/openrouter` lists models and recommends ones for a given task.
+It cannot switch the current session's model - that is fixed once a session
+starts - so it hands you the command to start a new one.
+
+## Which model for what
+
+| Job | Try |
+|---|---|
+| Bulk edits, mechanical refactors | `deepseek-chat`, `qwen` variants |
+| Long-context reading | `gemini-3.6-flash` |
+| Reasoning-heavy analysis | `deepseek-r1` |
+| Free / throwaway | anything suffixed `:free` |
+
+These bill to **OpenRouter**, not to the Claude or Codex quotas - useful when
+either is running low.
+
+## What is NOT available
+
+- **Cursor**: no public API exists. The Ultra subscription only works inside
+  Cursor's own apps. No key would change this.
+- **Grok via your subscription**: the Grok CLI uses OAuth, not an API key. Grok
+  models are reachable through OpenRouter instead (already working). A direct
+  xAI channel would need a separately billed key from console.x.ai.
+
+## Status line
+
+The bar under the prompt shows: model, folder, git branch, context used, session
+cost, and remaining quota per provider. Script: `~/.claude/statusline.sh`.
+
+Quota is cached for 5 minutes and refreshed in the background, because
+`quota-axi` takes ~2s and the status line must stay fast.
+
+Compaction is set to fire at **14%** of the 1M context window, which is ~140k
+tokens (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` in `~/.claude/settings.json`).
 
 ---
 
