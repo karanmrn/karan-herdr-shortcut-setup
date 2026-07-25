@@ -11,14 +11,8 @@ config.font = wezterm.font_with_fallback {
 config.font_size = 14
 config.line_height = 1.08
 
-config.colors = {
-  foreground = '#dce7f7',
-  background = '#07111f',
-  cursor_bg = '#8bdcff',
-  cursor_fg = '#07111f',
-  selection_bg = '#24466f',
-  selection_fg = '#ffffff',
-}
+-- same scheme as Ghostty, so both terminals match
+config.color_scheme = 'rose-pine-moon'
 
 config.window_decorations = 'RESIZE'
 config.window_background_opacity = 0.94
