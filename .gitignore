@@ -1,0 +1,12 @@
+# never commit secrets
+secrets/
+*.env
+*.token
+*_rsa
+*.pem
+
+# backups made by install.sh
+*.pre-dotfiles-*
+*.backup-*
+
+.DS_Store

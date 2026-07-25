@@ -1,0 +1,15 @@
+# Ghostty - mirrors the WezTerm setup (kunchenguid/dotfiles look)
+# Reload in place with cmd+shift+, ; full docs: ghostty +show-config --default --docs
+
+theme = Rose Pine Moon
+
+font-family = Hack Nerd Font
+font-size = 15
+
+background-opacity = 0.8
+background-blur-radius = 50
+
+window-decoration = false
+macos-titlebar-style = hidden
+window-padding-x = 8
+window-padding-y = 8
