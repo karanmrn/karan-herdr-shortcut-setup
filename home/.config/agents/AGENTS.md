@@ -45,6 +45,48 @@ Source of truth: `~/.dotfiles-karan/home/.config/agents/AGENTS.md`
 
 ---
 
+## Engineering skills - read the file when the trigger matches
+
+A library of engineering playbooks lives at `~/.claude/skills/<name>/SKILL.md`.
+They are plain markdown. You cannot auto-load them, but you CAN read them.
+
+**When a task matches a trigger below, read that file first and follow it.**
+Do not guess the contents from the name.
+
+| Read this skill | When |
+|---|---|
+| `writing-plans` | You have requirements for a multi-step task, before touching code |
+| `write-spec` | Breaking a large feature into independently verifiable slices |
+| `implement-spec` | Implementing an existing spec across multiple passes |
+| `executing-plans` | Executing a written plan with review checkpoints |
+| `test-driven-development` | Implementing any feature or bugfix, before writing implementation code |
+| `diagnosing-bugs` | Debugging something broken, throwing, failing, or slow |
+| `using-git-worktrees` | Feature work needing isolation from the current workspace |
+| `refactor-clean` | A change reveals duplication, dead owners, or parallel abstractions |
+| `code-review` | Reviewing a diff for naming, stale references, complexity |
+| `review` | Closeout pass on finished work (shape, then diff, then docs) |
+| `requesting-code-review` | Completing a feature or before merging |
+| `receiving-code-review` | Acting on review feedback, especially if unclear |
+| `verification-before-completion` | About to claim work is complete, fixed, or passing |
+| `finishing-a-development-branch` | Implementation done, deciding how to integrate |
+| `domain-modeling` | Pinning down domain terminology, or recording a decision |
+| `write-docs` | Creating or revising a README or markdown docs |
+| `check-work` | Verifying your own output before handing it back |
+
+Read with your normal file-reading tool, for example:
+
+```
+~/.claude/skills/diagnosing-bugs/SKILL.md
+```
+
+Some skills reference sibling files in the same directory - read those too when
+the skill points at them.
+
+`~/.claude/skills/` holds 640+ skills beyond this table. If a task seems to have
+a matching playbook, list that directory and look before improvising.
+
+---
+
 ## Response style (caveman)
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
