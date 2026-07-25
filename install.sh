@@ -36,6 +36,7 @@ link ".config/wezterm/wezterm.lua"
 link ".config/ghostty/config"
 link ".config/herdr/config.toml"
 link ".config/starship.toml"
+link ".config/agents/AGENTS.md"
 
 echo
 echo "Done. Open a new terminal tab to pick up shell changes."
