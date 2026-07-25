@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# openrouter - pick any model served by the local proxy, then launch Claude Code on it.
+#
+#   openrouter              interactive fuzzy picker over every model
+#   openrouter deepseek     jump straight to a model (substring match, picker if ambiguous)
+#   openrouter --list       print all model names and exit
+#
+# Models come from cli-proxy-api on 127.0.0.1:8317 (OpenRouter + Codex).
+set -uo pipefail
+
+SECRETS="$HOME/.config/secrets/claudex.env"
+BASE="http://127.0.0.1:8317"
+CACHE="$HOME/.cache/openrouter-models.txt"
+MAXAGE=3600
+
+[ -r "$SECRETS" ] || { echo "openrouter: missing $SECRETS" >&2; exit 1; }
+# shellcheck disable=SC1090
+source "$SECRETS"
+[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ] || { echo "openrouter: ANTHROPIC_AUTH_TOKEN not set in $SECRETS" >&2; exit 1; }
+
+fetch_models() {
+  mkdir -p "$(dirname "$CACHE")"
+  local age=999999
+  if [ -f "$CACHE" ]; then
+    age=$(( $(date +%s) - $(stat -f %m "$CACHE" 2>/dev/null || echo 0) ))
+  fi
+  if [ "$age" -gt "$MAXAGE" ] || [ ! -s "$CACHE" ]; then
+    curl -s -m 10 -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
+      "$BASE/v1/models" 2>/dev/null \
+      | jq -r '.data[].id' 2>/dev/null | sort > "$CACHE.tmp"
+    if [ -s "$CACHE.tmp" ]; then mv "$CACHE.tmp" "$CACHE"; else rm -f "$CACHE.tmp"; fi
+  fi
+  [ -s "$CACHE" ] || { echo "openrouter: could not reach the proxy at $BASE" >&2; exit 1; }
+  cat "$CACHE"
+}
+
+case "${1:-}" in
+  --list|-l) fetch_models; exit 0 ;;
+  --refresh) rm -f "$CACHE"; fetch_models >/dev/null; echo "model list refreshed"; exit 0 ;;
+  -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+
+models=$(fetch_models)
+query="${1:-}"
+[ $# -gt 0 ] && shift
+
+pick() {
+  if command -v fzf >/dev/null 2>&1; then
+    printf '%s\n' "$models" | fzf \
+      --height=60% --reverse --border \
+      --prompt="model > " \
+      --query="$query" \
+      --header="$(printf '%s\n' "$models" | wc -l | tr -d ' ') models via local proxy - Enter to launch, Esc to cancel"
+  else
+    printf '%s\n' "$models" | nl -w3 -s') ' >&2
+    printf 'number: ' >&2
+    read -r n
+    printf '%s\n' "$models" | sed -n "${n}p"
+  fi
+}
+
+if [ -n "$query" ]; then
+  matches=$(printf '%s\n' "$models" | grep -i -- "$query" || true)
+  count=$(printf '%s' "$matches" | grep -c . || true)
+  if [ "$count" = "1" ]; then
+    model="$matches"
+  elif [ "$count" = "0" ]; then
+    echo "openrouter: no model matching '$query'" >&2
+    echo "try: openrouter --list" >&2
+    exit 1
+  else
+    model=$(pick)
+  fi
+else
+  model=$(pick)
+fi
+
+[ -n "${model:-}" ] || { echo "cancelled" >&2; exit 130; }
+
+echo "launching: $model"
+ANTHROPIC_BASE_URL="$BASE" \
+CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
+CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
+ENABLE_TOOL_SEARCH=false \
+exec claude --model "$model" "$@"

@@ -38,6 +38,7 @@ link ".config/herdr/config.toml"
 link ".config/starship.toml"
 link ".config/agents/AGENTS.md"
 link ".claude/statusline.sh"
+link ".local/bin/openrouter"
 
 echo
 echo "Done. Open a new terminal tab to pick up shell changes."

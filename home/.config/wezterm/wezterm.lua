@@ -15,8 +15,9 @@ config.line_height = 1.08
 config.color_scheme = 'rose-pine-moon'
 
 config.window_decorations = 'RESIZE'
-config.window_background_opacity = 0.94
-config.macos_window_background_blur = 24
+-- matched to Ghostty (0.8 / blur 50)
+config.window_background_opacity = 0.8
+config.macos_window_background_blur = 50
 config.window_padding = {
   left = 14,
   right = 14,
