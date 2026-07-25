@@ -118,7 +118,8 @@ alias push='git push'
 alias pull='git pull'
 alias m='git switch main'
 alias cc='claude --dangerously-skip-permissions'
-alias co='codex --full-auto'
+# codex 0.145 dropped --full-auto; this is the same behaviour
+alias co='codex --sandbox workspace-write --ask-for-approval never'
 
 # fm: FirstMate entry point. Works from WezTerm, Ghostty, or cmux.
 export FM_WORKSPACE="$HOME/karan-agent-workspace"
