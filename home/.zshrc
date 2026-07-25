@@ -72,6 +72,33 @@ claudex() {
   )
 }
 
+# aim: any model through the local proxy (OpenRouter + Codex).
+# usage: aim deepseek | aim gemini-pro | aim kimi | aim  (lists models)
+aim() {
+  local secrets="$HOME/.config/secrets/claudex.env"
+  if [ ! -r "$secrets" ]; then
+    print -u2 "aim: missing $secrets"
+    return 1
+  fi
+  (
+    source "$secrets"
+    export ANTHROPIC_BASE_URL=http://127.0.0.1:8317
+    if [ $# -eq 0 ]; then
+      print "available models:"
+      curl -s -m 5 -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
+        "$ANTHROPIC_BASE_URL/v1/models" 2>/dev/null | jq -r '.data[].id' | sort | sed 's/^/  /'
+      print ""
+      print "usage: aim <model> [claude args...]"
+      return 0
+    fi
+    local model="$1"; shift
+    CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
+    CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
+    ENABLE_TOOL_SEARCH=false \
+    claude --model "$model" "$@"
+  )
+}
+
 # >>> grok installer >>>
 export PATH="$HOME/.grok/bin:$PATH"
 fpath=(~/.grok/completions/zsh $fpath)
