@@ -64,6 +64,7 @@ Do not guess the contents from the name.
 | `using-git-worktrees` | Feature work needing isolation from the current workspace |
 | `refactor-clean` | A change reveals duplication, dead owners, or parallel abstractions |
 | `code-review` | Reviewing a diff for naming, stale references, complexity |
+| `jev` | Advising on an ambiguous semantic review judgment |
 | `review` | Closeout pass on finished work (shape, then diff, then docs) |
 | `requesting-code-review` | Completing a feature or before merging |
 | `receiving-code-review` | Acting on review feedback, especially if unclear |
@@ -84,6 +85,16 @@ the skill points at them.
 
 `~/.claude/skills/` holds 640+ skills beyond this table. If a task seems to have
 a matching playbook, list that directory and look before improvising.
+
+Jev is an optional review adviser. Use it only when observed evidence leaves an
+ambiguous semantic judgment. Never send it deterministic checks such as builds,
+types, lint, tests, exact policy matches, file equality, or schema validation.
+Its typed answer and probability are supporting evidence, never a verdict, gate,
+or reason to waive verification. Missing credentials must not block review.
+
+Read `jev` and `typesafe-ai` before a call. Use `TYPESAFE_API_KEY` only when it is
+already available through the environment or Keychain. Never print, persist,
+log, paste, or commit the secret.
 
 ---
 

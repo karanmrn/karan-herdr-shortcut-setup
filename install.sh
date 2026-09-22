@@ -37,6 +37,7 @@ link ".config/ghostty/config"
 link ".config/herdr/config.toml"
 link ".config/starship.toml"
 link ".config/agents/AGENTS.md"
+link ".cursor/rules/jev-review.mdc"
 link ".claude/statusline.sh"
 link ".local/bin/openrouter"
 
