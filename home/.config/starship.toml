@@ -1,9 +1,52 @@
+# Starship prompt. Rose Pine Moon palette to match Ghostty and WezTerm.
 add_newline = false
-format = "$directory$git_branch$git_status$cmd_duration$line_break$character"
+palette = "rose_pine_moon"
+format = "$directory$git_branch$git_status$nodejs$cmd_duration$line_break$character"
 
-[character]
-success_symbol = "[❯](purple)"
-error_symbol = "[❯](red)"
+[palettes.rose_pine_moon]
+love = "#eb6f92"
+gold = "#f6c177"
+rose = "#ea9a97"
+pine = "#3e8fb0"
+foam = "#9ccfd8"
+iris = "#c4a7e7"
+muted = "#6e6a86"
+
+[directory]
+style = "bold foam"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+symbol = " "
+style = "iris"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "rose"
+format = "([$all_status$ahead_behind]($style) )"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+modified = "!"
+staged = "+"
+untracked = "?"
+stashed = "≡"
+
+[nodejs]
+symbol = " "
+style = "pine"
+format = "[$symbol($version)]($style) "
+detect_files = ["package.json"]
+detect_extensions = []
 
 [cmd_duration]
+min_time = 2000
+style = "muted"
 format = "[$duration]($style) "
+
+[character]
+success_symbol = "[❯](iris)"
+error_symbol = "[❯](love)"

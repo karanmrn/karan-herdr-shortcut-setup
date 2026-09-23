@@ -1,3 +1,4 @@
+onboarding = false
 [keys]
 prefix = "ctrl+b"
 focus_pane_left  = "prefix+h"
@@ -15,3 +16,41 @@ copy_mode  = "prefix+y"  # herdr's copy-mode entry key; copy-mode's own internal
 [ui]
 # Agents panel order: explicit choice of "spaces" (grouped by space, the default) over "priority".
 agent_panel_sort = "spaces"
+
+# Agent sidebar colours (Herdr 0.9 value rules). Catppuccin Mocha hues.
+# Row 1: state icon, workspace label coloured by fleet role, tab.
+# Row 2: harness id coloured per harness, then the $role metadata token that
+#        firstmate reports with `herdr pane report-metadata <pane> --source firstmate --token role=<role>`.
+# Row 3: terminal title, dimmed, so the task reads at a glance.
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  [
+    "state_icon",
+    { token = "workspace", bold = true, rules = [
+      { equals = "karan-agent-workspace", fg = "#f5c2e7", bold = true },
+      { starts_with = "2ndmate-", fg = "#fab387", bold = true },
+      { equals = "pubmaxx", fg = "#a6e3a1" },
+    ] },
+    "tab",
+  ],
+  [
+    { token = "agent", rules = [
+      { contains = "claude", ignore_case = true, fg = "#89b4fa" },
+      { contains = "codex", ignore_case = true, fg = "#94e2d5" },
+      { contains = "grok", ignore_case = true, fg = "#f38ba8" },
+      { contains = "cursor", ignore_case = true, fg = "#cba6f7" },
+      { equals = "pi", ignore_case = true, fg = "#f9e2af" },
+      { contains = "opencode", ignore_case = true, fg = "#74c7ec" },
+      { contains = "muse", ignore_case = true, fg = "#eba0ac" },
+      { contains = "hermes", ignore_case = true, fg = "#b4befe" },
+    ] },
+    { token = "$role", bold = true, rules = [
+      { equals = "firstmate", fg = "#f5c2e7" },
+      { equals = "secondmate", fg = "#fab387" },
+      { equals = "crewmate", fg = "#89dceb" },
+      { equals = "scout", fg = "#a6adc8" },
+    ] },
+  ],
+  [{ token = "terminal_title_stripped", dim = true }],
+]
