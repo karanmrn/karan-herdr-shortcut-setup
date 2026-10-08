@@ -31,6 +31,7 @@ link() {
   echo "link   $1"
 }
 
+link ".zshenv"
 link ".zshrc"
 link ".config/wezterm/wezterm.lua"
 link ".config/ghostty/config"
