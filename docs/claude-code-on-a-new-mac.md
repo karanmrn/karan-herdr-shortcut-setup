@@ -61,9 +61,9 @@ a package.
 
 ## 3. What install.sh does for Claude Code
 
-`install.sh` makes symlinks from your home folder into this repo. It backs up
-anything that it replaces to `<name>.pre-dotfiles-YYYYMMDD-HHMMSS`. It is safe to
-run more than once.
+See the [README installation instructions](../README.md#install-on-a-new-mac)
+for backup behaviour and common usage. The Claude Code setup includes these
+links:
 
 | Link in your home folder | Repo file |
 |---|---|
@@ -93,12 +93,9 @@ to set by hand.
 
 ## 4. Skills
 
-A skill is a folder with a `SKILL.md` playbook. The shared `AGENTS.md` tells
-each agent where to look, in this order:
-
-1. Project skills in `<repo>/.agents/skills/`.
-2. Shared skills in `~/.agents/skills/`.
-3. The harness or plugin catalogue.
+A skill is a folder with a `SKILL.md` playbook. The
+[shared agent instructions](../home/.config/agents/AGENTS.md#engineering-skills)
+define the skill lookup order.
 
 On the main Mac, `~/.agents/skills/` holds the catalogue, about 300 skills.
 Most entries in `~/.claude/skills/` are symlinks into `~/.agents/skills/`, so
@@ -129,7 +126,7 @@ This repo publishes two skills of its own:
 - `openrouter` explains the local model proxy and OpenRouter integrations.
 
 On the main Mac these two skills are real folders in `~/.agents/skills/`. A new
-Mac gets them from `install.sh` as links into this repo.
+Mac gets them from `install.sh` as links under `~/.claude/skills/` into this repo.
 
 The FirstMate workspace brings its own skills in
 `~/karan-agent-workspace/.agents/skills/`.
@@ -143,7 +140,9 @@ Set these in `~/.claude/settings.json` on the new Mac. The main Mac uses them.
 ### Status line
 
 ```json
-"statusLine": { "type": "command", "command": "bash ~/.claude/statusline.sh", "padding": 0 }
+{
+  "statusLine": { "type": "command", "command": "bash ~/.claude/statusline.sh", "padding": 0 }
+}
 ```
 
 The script shows model, folder, branch, context, cost and provider quota. It
@@ -255,30 +254,21 @@ workspace. It is not part of this repo.
 
 ## 7. Keys and secrets
 
-No key, token or password goes in this repo. `.gitignore` blocks `*.env`,
-`secrets/` and key files.
+Follow the [README secret-storage instructions](../README.md#secrets-are-not-in-this-repo)
+for the TinyFish key, proxy token and `claude-pubmaxx` API key. Additional
+credentials used by the agent tools are:
 
 | Secret | Where it lives | Read by |
 |---|---|---|
-| `TINYFISH_API_KEY` | macOS Keychain item `tinyfish-api-key` | `~/.zshrc` |
 | `TYPESAFE_API_KEY` | environment or Keychain | Jev and TypeSafe skills |
-| Proxy token `ANTHROPIC_AUTH_TOKEN` | `~/.config/secrets/claudex.env`, mode 600 | `claudex`, `aim`, `openrouter` |
 | Fleet keys | `~/karan-agent-workspace/data/keys.env`, mode 600 | FirstMate and crewmates |
-| Anthropic API key for `claude-pubmaxx` | OpenCode `auth.json` | `claude-pubmaxx` |
 
 `data/keys.env` is one `NAME=value` per line. The FirstMate repo ignores the
 `data/` folder, so the file is never committed.
 
-To store the TinyFish key in Keychain, run this command. It asks for the value.
-
-```sh
-security add-generic-password -a "$USER" -s tinyfish-api-key -w
-```
-
 Clone FirstMate as section 6 shows before creating `data/keys.env`.
-Create `claudex.env` and `keys.env` by hand on the new Mac. Then run
-`chmod 600` on each file. Do not send their contents through chat, email or a
-pull request.
+Create `keys.env` by hand on the new Mac. Then run `chmod 600` on the file.
+Do not send credentials through chat, email or a pull request.
 
 ---
 
@@ -300,4 +290,5 @@ pull request.
 14. Run `herdr integration install claude`. Repeat with `codex` if you use Codex in Herdr.
 15. Start `herdr`, then type `fm`. Ask FirstMate to check its toolchain.
 
-When FirstMate answers and lists its tools, the new Mac matches the main Mac.
+Ask FirstMate to identify any missing tools, skills or authentication before
+starting project work. A reply alone does not confirm that the setups match.

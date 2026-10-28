@@ -18,19 +18,12 @@ Open a terminal tab and type:
 fm
 ```
 
-That is the whole thing. `fm` does three steps you used to do by hand:
+See the [README's `fm` reference](../README.md#fm) for its behaviour and
+workspace defaults. It greets you as Captain Karan and shows the current git
+branch. It works from WezTerm, Ghostty, or cmux.
 
-| Old way | Now |
-|---|---|
-| `cd ~/karan-agent-workspace` | done by `fm` |
-| check whether herdr is running | done by `fm` |
-| launch the agent | done by `fm` |
-
-It greets you as Captain Karan, shows the current git branch, and starts
-FirstMate. Works from WezTerm, Ghostty, or cmux.
-
-You do NOT need to type `herdr` separately if a herdr session is already
-running - `fm` detects it and will not nest a session inside a session.
+For Herdr workers, start `herdr` before running `fm`. If you are already inside
+Herdr, run `fm` there. The function does not start or attach to Herdr.
 
 ## The three commands, and when to use which
 
@@ -467,12 +460,11 @@ Rule of thumb: **pushed = visible to agents. Unpushed = invisible.**
 
 # 8. Security
 
-The Anthropic token that used to sit in plain text inside `~/.zshrc` now lives
-in `~/.config/secrets/claudex.env`, readable only by you (mode 600), loaded only
-when `claudex` runs. It is gitignored and not in the dotfiles repo.
+See the [README secret-storage instructions](../README.md#secrets-are-not-in-this-repo)
+for the proxy token's location, permissions and consumers.
 
-**Still recommended:** rotate that token. It was in a plain file for a while. To
-replace it, edit that one file - nothing else changes.
+Rotate the legacy token that was stored in plain text inside `~/.zshrc`.
+Replace it in the secret file described in the README.
 
 ---
 
@@ -483,16 +475,8 @@ instructions. The normal checkout is `~/.dotfiles-karan`.
 
 ## Shared agent instructions
 
-`~/.config/agents/AGENTS.md` is one file, symlinked into four agents:
-
-| Agent | Reads |
-|---|---|
-| Codex | `~/.codex/AGENTS.md` -> shared file |
-| opencode | `~/.config/opencode/AGENTS.md` -> shared file |
-| grok | `~/.grok/AGENTS.md` -> shared file |
-| Claude | `~/.claude/CLAUDE.md` -> shared file |
-
-Edit the shared file once and all four agents receive the same instructions.
+See the [Claude Code installation reference](claude-code-on-a-new-mac.md#3-what-installsh-does-for-claude-code)
+for the shared instruction links and the skills that `install.sh` publishes.
 
 The [shared instruction file](../home/.config/agents/AGENTS.md) owns the
 engineering rules, response style, skill lookup order, and Jev advisory policy.

@@ -50,9 +50,11 @@ its appearance in cmux Settings directly.
 
 ## Secrets are not in this repo
 
-`~/.config/secrets/claudex.env` holds the Anthropic token for the `claudex`
-function (mode 600). It is intentionally outside this repo and must never be
-committed. On a new machine, recreate it by hand.
+`~/.config/secrets/claudex.env` holds `ANTHROPIC_AUTH_TOKEN` for `claudex`,
+`aim` and `openrouter` (mode 600). It is intentionally outside this repo and
+must never be committed. On a new machine, recreate it by hand with an
+`export ANTHROPIC_AUTH_TOKEN='your-local-proxy-token'` assignment. Replace the
+placeholder with your token, then run `chmod 600 ~/.config/secrets/claudex.env`.
 
 `claude-pubmaxx` reads an Anthropic API key from OpenCode's local
 `~/.local/share/opencode/auth.json`. Connect an Anthropic API key in OpenCode
@@ -61,6 +63,12 @@ before using the command. Keep that file outside this repo.
 The shell loads `TINYFISH_API_KEY` from the macOS Keychain item
 `tinyfish-api-key` for the current user when the variable is empty. It preserves
 an existing value and leaves the variable unset if retrieval fails.
+
+To store the TinyFish key, run this command. Enter the value at the prompt.
+
+```sh
+security add-generic-password -a "$USER" -s tinyfish-api-key -w
+```
 
 ## Aliases
 
