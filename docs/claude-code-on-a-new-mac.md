@@ -105,8 +105,11 @@ Most entries in `~/.claude/skills/` are symlinks into `~/.agents/skills/`, so
 Claude Code and Codex see the same skills.
 
 The `skills` CLI installs these skills from GitHub, for example
-`npx skills add <owner>/<repo>`. It records each source in
-`~/.agents/.skill-lock.json`. The largest sources are:
+`npx skills add -g <owner>/<repo>`. The `-g` flag makes the installation
+available across projects. Select Claude Code and Codex when prompted.
+See the [CLI installation reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-add).
+It records each global source in `~/.agents/.skill-lock.json`.
+The largest sources are:
 
 | Source | Examples |
 |---|---|
@@ -118,7 +121,7 @@ The `skills` CLI installs these skills from GitHub, for example
 | `kunchenguid/*` | `no-mistakes`, `quota-axi`, `tasks-axi`, `vision` |
 
 To copy the catalogue, copy `~/.agents/.skill-lock.json` from the main Mac.
-Then install each source again with the `skills` CLI.
+Then install each source again with `npx skills add -g <owner>/<repo>`.
 
 This repo publishes two skills of its own:
 
@@ -170,16 +173,40 @@ with `/plugin` inside Claude Code.
 
 ### MCP servers
 
-These MCP servers are in the user scope of `~/.claude.json`. Add them with
-`claude mcp add`. Each one signs in on first use. No token is stored in this
-repo.
+These MCP servers are in the user scope of `~/.claude.json`. The commands
+below use `--scope user` so every project can use them. See the
+[Claude Code MCP guide](https://code.claude.com/docs/en/mcp#user-scope).
+No token is stored in this repo.
 
-| Server | Type |
+| Server and setup instructions | Connection |
 |---|---|
-| `posthog` | HTTP |
-| `tinyfish` | HTTP |
-| `superlogical` | HTTP |
-| `mempalace` | local command `~/.local/bin/mempalace-mcp` |
+| [PostHog](https://posthog.com/docs/model-context-protocol) | HTTP: `https://mcp.posthog.com/mcp` |
+| [TinyFish](https://docs.tinyfish.ai/mcp-integration) | HTTP: `https://agent.tinyfish.ai/mcp` |
+| [Superlogical](https://www.superlogical.com/rex/docs/beta/community-mcp) | HTTP: `https://www.superlogical.com/rex/community-mcp` |
+| [MemPalace](https://mempalaceofficial.com/guide/getting-started#installation) | Local command: `~/.local/bin/mempalace-mcp` |
+
+Register the HTTP servers:
+
+```sh
+claude mcp add --scope user --transport http posthog https://mcp.posthog.com/mcp
+claude mcp add --scope user --transport http tinyfish https://agent.tinyfish.ai/mcp
+claude mcp add --scope user --transport http superlogical https://www.superlogical.com/rex/community-mcp
+```
+
+Open `/mcp` inside Claude Code to authenticate each HTTP server.
+Superlogical requires membership in the Rex Beta Discord server.
+
+For MemPalace, follow the linked installation instructions before registering
+the local executable. They cover the Python prerequisite and installation
+with `uv tool install mempalace`. Then run:
+
+```sh
+claude mcp add --scope user --transport stdio mempalace "$HOME/.local/bin/mempalace-mcp"
+```
+
+If your installer uses another directory, replace the executable path with
+the absolute path from `command -v mempalace-mcp`. Local MemPalace requires
+no account sign-in.
 
 The claude.ai connectors (for example Gmail, Slack, Notion and Vercel) come
 from your claude.ai account. They appear when you sign in.
@@ -266,8 +293,8 @@ pull request.
 7. Open a new WezTerm tab. Check that `type cc fm aim` finds all three.
 8. Run `claude` once and sign in.
 9. Edit `~/.claude/settings.json` as section 5 shows: status line, marketplaces, plugins.
-10. Add the MCP servers from section 5 with `claude mcp add`.
-11. Install the shared skills into `~/.agents/skills` with the `skills` CLI.
+10. Follow section 5 to install MemPalace, register all four MCP servers in user scope, and authenticate the HTTP servers.
+11. Install each shared skill source with `npx skills add -g <owner>/<repo>` as section 4 shows.
 12. Clone FirstMate: `gh repo clone karanmrn/firstmate ~/karan-agent-workspace`.
 13. Store keys as section 7 shows: Keychain item, `claudex.env`, `keys.env`.
 14. Run `herdr integration install claude`. Repeat with `codex` if you use Codex in Herdr.
