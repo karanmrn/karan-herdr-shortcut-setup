@@ -46,7 +46,7 @@ export PATH="$HOME/.local/bin:$HOME/.hermes/node/bin:$PATH"
 
 
 # Vite+ bin (https://viteplus.dev)
-. "$HOME/.vite-plus/env"
+[ -s "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
 
 
 
@@ -121,8 +121,11 @@ alias cc='claude --dangerously-skip-permissions'
 # codex 0.145 dropped --full-auto; this is the same behaviour
 alias co='codex --sandbox workspace-write --ask-for-approval never'
 
+# FirstMate fleet env (any cwd); see also ~/.zprofile hook from install.sh
+_DOTFILES_KARAN="${DOTFILES_KARAN:-$HOME/.dotfiles-karan}"
+[ -f "$_DOTFILES_KARAN/home/firstmate-env.zsh" ] && source "$_DOTFILES_KARAN/home/firstmate-env.zsh"
+
 # fm: FirstMate entry point. Works from WezTerm, Ghostty, or cmux.
-export FM_WORKSPACE="$HOME/karan-agent-workspace"
 fm() {
   if [ ! -d "$FM_WORKSPACE" ]; then
     print -u2 "fm: workspace not found at $FM_WORKSPACE"
@@ -143,6 +146,28 @@ bindkey '^f' autosuggest-accept
 
 # starship prompt
 eval "$(starship init zsh)"
+
+# PUBMAXX Claude print mode with Console API credits
+claude-pubmaxx() (
+  emulate -L zsh
+  unsetopt xtrace verbose
+  local pubmaxx_api_key
+  pubmaxx_api_key="$(python3 -c 'import json, pathlib, sys; auth = json.loads((pathlib.Path.home() / ".local/share/opencode/auth.json").read_text()); entry = auth.get("anthropic", {}); key = entry.get("key", ""); sys.exit("Connect an Anthropic API key in OpenCode first.") if entry.get("type") != "api" or not key.startswith("sk-ant-") else sys.stdout.write(key)')" || return 1
+  cd /Users/karanmanoharan/code/projects/pubmaxx || return 1
+  unset ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_PROFILE
+  unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
+  export ANTHROPIC_API_KEY="$pubmaxx_api_key"
+  export ANTHROPIC_BASE_URL=https://api.anthropic.com
+  command claude -p --model claude-sonnet-5-5 "$@"
+)
+# End PUBMAXX Claude print mode
+
+# TinyFish API key from the macOS keychain; never commit the literal.
+# Store it once: security add-generic-password -a "$USER" -s tinyfish-api-key -w
+if [ -z "$TINYFISH_API_KEY" ]; then
+  TINYFISH_API_KEY="$(security find-generic-password -a "$USER" -s tinyfish-api-key -w 2>/dev/null)" \
+    && export TINYFISH_API_KEY || unset TINYFISH_API_KEY
+fi
 
 # syntax highlighting must be sourced last
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

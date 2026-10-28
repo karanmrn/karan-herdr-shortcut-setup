@@ -45,63 +45,57 @@ Source of truth: `~/.dotfiles-karan/home/.config/agents/AGENTS.md`
 
 ---
 
-## Engineering skills - read the file when the trigger matches
+## Engineering skills
 
-A library of engineering playbooks lives at `~/.claude/skills/<name>/SKILL.md`.
-They are plain markdown. You cannot auto-load them, but you CAN read them.
+Read the matching SKILL.md before applying a playbook. Prefer project skills in
+`.agents/skills/`, then shared skills in `~/.agents/skills/`, then the active
+harness or plugin catalog. Resolve symlinks before updating an installed skill.
+Project AGENTS.md and explicit user scope govern how a playbook is applied.
 
-**When a task matches a trigger below, read that file first and follow it.**
-Do not guess the contents from the name.
+| Skill | When |
+| --- | --- |
+| `to-spec` | Publish an agreed specification when issue creation is requested |
+| `implement-spec` | Execute an existing specification |
+| `tdd` | Implement a feature or bug fix |
+| `diagnosing-bugs` | Reproduce and diagnose broken or slow behaviour |
+| `new-feature` | Create isolation when the harness has not supplied it |
+| `codebase-design` | Resolve duplication, ownership or module boundaries |
+| `code-review` | Review a diff and trace its reachable behaviour |
+| `jev` | Advise on an ambiguous semantic review judgment |
+| `verification-before-completion` | Verify evidence before claiming success |
+| `domain-modeling` | Define domain terminology and decisions |
+| `technical-writing` | Write developer documentation |
+| `unslop` | Check prose before delivering it |
 
-| Read this skill | When |
-|---|---|
-| `writing-plans` | You have requirements for a multi-step task, before touching code |
-| `write-spec` | Breaking a large feature into independently verifiable slices |
-| `implement-spec` | Implementing an existing spec across multiple passes |
-| `executing-plans` | Executing a written plan with review checkpoints |
-| `test-driven-development` | Implementing any feature or bugfix, before writing implementation code |
-| `diagnosing-bugs` | Debugging something broken, throwing, failing, or slow |
-| `using-git-worktrees` | Feature work needing isolation from the current workspace |
-| `refactor-clean` | A change reveals duplication, dead owners, or parallel abstractions |
-| `code-review` | Reviewing a diff for naming, stale references, complexity |
-| `review` | Closeout pass on finished work (shape, then diff, then docs) |
-| `requesting-code-review` | Completing a feature or before merging |
-| `receiving-code-review` | Acting on review feedback, especially if unclear |
-| `verification-before-completion` | About to claim work is complete, fixed, or passing |
-| `finishing-a-development-branch` | Implementation done, deciding how to integrate |
-| `domain-modeling` | Pinning down domain terminology, or recording a decision |
-| `write-docs` | Creating or revising a README or markdown docs |
-| `check-work` | Verifying your own output before handing it back |
+Load only the playbooks needed for the task. If a named skill is absent, search
+the installed catalog once and report the missing dependency. Do not install a
+whole collection to recover one skill. Preserve custom skills during updates;
+quarantine proven duplicates outside discovery roots with a restore manifest.
 
-Read with your normal file-reading tool, for example:
+Jev is an optional review adviser. Use it only when observed evidence leaves an
+ambiguous semantic judgment. Never send it deterministic checks such as builds,
+types, lint, tests, exact policy matches, file equality, or schema validation.
+Its typed answer and probability are supporting evidence, never a verdict, gate,
+or reason to waive verification. Missing credentials must not block review.
 
-```
-~/.claude/skills/diagnosing-bugs/SKILL.md
-```
-
-Some skills reference sibling files in the same directory - read those too when
-the skill points at them.
-
-`~/.claude/skills/` holds 640+ skills beyond this table. If a task seems to have
-a matching playbook, list that directory and look before improvising.
+Read `jev` and `typesafe-ai` before a call. Use `TYPESAFE_API_KEY` only when it is
+already available through the environment or Keychain. Never print, persist,
+log, paste, or commit the secret.
 
 ---
 
-## Response style (caveman)
+## Response style (Simplified Technical English)
 
-Respond terse like smart caveman. All technical substance stay. Only fluff die.
+Use the `asd-ste100` skill for plans, implementation updates, instructions and
+reports to the user. Read `~/.codex/skills/asd-ste100/SKILL.md` before applying it.
+This preference replaces the previous caveman style.
 
-Rules:
-- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
-- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
-- Pattern: [thing] [action] [reason]. [next step].
-- Not: "Sure! I'd be happy to help you with that."
-- Yes: "Bug in auth middleware. Fix:"
-
-Switch level: /caveman lite|full|ultra|wenyan
-Stop: "stop caveman" or "normal mode"
-
-Auto-Clarity: drop caveman for security warnings, irreversible actions, or when
-the user is confused. Resume after.
-
-Boundaries: code, commits, and PRs written normal.
+- Use complete sentences with explicit subjects, verbs and articles.
+- Use plain words and active voice. Keep technical names exact.
+- Give one instruction per sentence. Keep descriptions to one clear idea.
+- Prefer at most 20 words per instruction and 25 words per description.
+- Preserve facts, uncertainty, conditions and exceptions when simplifying text.
+- Do not use semicolons or an em dash.
+- Use numbered steps for procedures with three or more actions.
+- Keep creative and marketing copy in the product's established voice.
+- Do not claim certified ASD-STE100 dictionary compliance.

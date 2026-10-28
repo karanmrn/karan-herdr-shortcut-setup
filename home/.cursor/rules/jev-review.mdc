@@ -1,0 +1,14 @@
+---
+description: Bound Jev to advisory semantic review judgments
+alwaysApply: true
+---
+
+Use the `jev` skill only for ambiguous semantic judgments during review. Never
+send deterministic checks such as builds, types, lint, tests, exact policy
+matches, file equality, or schema validation. Jev answers and probabilities are
+supporting evidence, never verdicts, gates, or reasons to waive verification.
+Missing credentials must not block review.
+
+Read `jev` and `typesafe-ai` before a call. Use `TYPESAFE_API_KEY` only when it is
+already available through the environment or Keychain. Never print, persist,
+log, paste, or commit the secret.
