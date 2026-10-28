@@ -22,7 +22,7 @@ For OpenRouter application integrations, use the `openrouter` skill. Inspect the
 
 The shell is zsh. WezTerm, Ghostty, and cmux provide terminal windows. Their shared theme and key settings live in the dotfiles repository.
 
-- `fm` enters `~/karan-agent-workspace` and starts Claude Code as the FirstMate session.
+- `fm` starts Claude Code as the FirstMate session. See the [dotfiles README](../../../../README.md#fm) for workspace defaults and environment overrides.
 - FirstMate is an agent distribution and coordinator. It uses isolated worktrees and a visible terminal backend such as Herdr. It is not a model or a harness.
 - Herdr manages terminal workspaces, tabs, panes, and recognized agents. The prefix is Ctrl+B. Read the `herdr` skill before controlling a session. Herdr control requires `HERDR_ENV=1`.
 - `co` launches Codex with workspace-write access and approval prompts disabled. Do not use it unless the user chose that execution mode.

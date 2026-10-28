@@ -30,14 +30,16 @@ cd ~/.dotfiles-karan
 brew bundle install --file=Brewfile   # optional: restore all packages
 ```
 
-`install.sh` backs up anything it would overwrite to `<file>.pre-dotfiles`,
-then symlinks. Because they are symlinks, editing `~/.zshrc` edits the file in
-this repo - the two never drift.
+`install.sh` backs up replaced files, directories, and symlinks to
+`<file>.pre-dotfiles-YYYYMMDD-HHMMSS`, then creates symlinks. Editing `~/.zshrc`
+edits the file in this repo. The installer also appends a FirstMate environment
+hook to `~/.zprofile` once. It preserves the existing profile content.
 
 ## The look
 
-rose-pine-moon everywhere: dark base with a purple-grey cast, muted rose and
-gold accents. Hack Nerd Font 15pt, 80% window opacity with heavy blur.
+See the [terminal appearance guide](docs/setup-guide.md#5-the-terminal-look)
+for WezTerm and Ghostty settings. Herdr uses Catppuccin with automatic theme
+switching disabled.
 
 cmux is not covered - it has no terminal theme key in its config schema, so set
 its appearance in cmux Settings directly.
@@ -47,6 +49,14 @@ its appearance in cmux Settings directly.
 `~/.config/secrets/claudex.env` holds the Anthropic token for the `claudex`
 function (mode 600). It is intentionally outside this repo and must never be
 committed. On a new machine, recreate it by hand.
+
+`claude-pubmaxx` reads an Anthropic API key from OpenCode's local
+`~/.local/share/opencode/auth.json`. Connect an Anthropic API key in OpenCode
+before using the command. Keep that file outside this repo.
+
+The shell loads `TINYFISH_API_KEY` from the macOS Keychain item
+`tinyfish-api-key` for the current user when the variable is empty. It preserves
+an existing value and leaves the variable unset if retrieval fails.
 
 ## Aliases
 
@@ -58,12 +68,29 @@ committed. On a new machine, recreate it by hand.
 | `pull` | `git pull` |
 | `m` | `git switch main` |
 | `cc` | `claude --dangerously-skip-permissions` |
-| `co` | `codex --full-auto` |
+| `co` | `codex --sandbox workspace-write --ask-for-approval never` |
 
-`cc` and `co` disable agent permission prompts. Deliberate escape hatches - know
-what they do.
+`cc` and `co` disable agent permission prompts. `co` retains the workspace-write
+sandbox. Use these commands only when you intend those permission settings.
 
 ## fm
 
-`fm` cds into the FirstMate workspace and starts it. Works from any terminal.
-Detects an existing herdr session and does not nest inside one.
+`fm` enters `FM_WORKSPACE` and starts Claude Code with any supplied arguments.
+It works from any terminal and does not create a nested Herdr session.
+
+`home/firstmate-env.zsh` supplies defaults through the interactive `.zshrc`
+and login `.zprofile` hooks. It preserves nonempty environment overrides:
+
+| Variable | Default |
+|---|---|
+| `FM_WORKSPACE` | `~/karan-agent-workspace` |
+| `FM_HOME` | the value of `FM_WORKSPACE` |
+| `FM_BACKEND` | `herdr` |
+
+## claude-pubmaxx
+
+`claude-pubmaxx <prompt>` starts Claude Code in print mode in
+`/Users/karanmanoharan/code/projects/pubmaxx` with `claude-sonnet-5-5`.
+It uses the Anthropic API directly and consumes Console API credits.
+It clears conflicting authentication and cloud-provider settings inside a
+subshell. See [Secrets](#secrets-are-not-in-this-repo) for its credential source.
