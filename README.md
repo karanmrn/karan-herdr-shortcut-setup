@@ -3,6 +3,9 @@
 Mac setup: terminals, shell, prompt, and the FirstMate entry point.
 Plain files and symlinks - no nix, no package manager takeover.
 
+Setting up a second Mac? Read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md)
+for the harnesses, skills, plugins, MCP servers, hooks, keys and FirstMate.
+
 Inspired by [kunchenguid/dotfiles](https://github.com/kunchenguid/dotfiles), but
 deliberately **not** declarative. That repo's `homebrew.onActivation.cleanup = "zap"`
 uninstalls anything not on its list. This repo never removes a package.
@@ -15,6 +18,7 @@ home/.config/wezterm/wezterm.lua   WezTerm: rose-pine-moon look
 home/.config/ghostty/config        Ghostty: same look
 home/.config/herdr/config.toml     herdr: tmux-style keybindings (ctrl+b prefix)
 home/.config/starship.toml         prompt format
+home/.claude/skills/               Claude Code skills published from this Mac
 Brewfile                           full Homebrew state (brew bundle install)
 Brewfile.formulae                  top-level formulae only
 Brewfile.casks                     casks only
@@ -46,9 +50,11 @@ its appearance in cmux Settings directly.
 
 ## Secrets are not in this repo
 
-`~/.config/secrets/claudex.env` holds the Anthropic token for the `claudex`
-function (mode 600). It is intentionally outside this repo and must never be
-committed. On a new machine, recreate it by hand.
+`~/.config/secrets/claudex.env` holds `ANTHROPIC_AUTH_TOKEN` for `claudex`,
+`aim` and `openrouter` (mode 600). It is intentionally outside this repo and
+must never be committed. On a new machine, recreate it by hand with an
+`export ANTHROPIC_AUTH_TOKEN='your-local-proxy-token'` assignment. Replace the
+placeholder with your token, then run `chmod 600 ~/.config/secrets/claudex.env`.
 
 `claude-pubmaxx` reads an Anthropic API key from OpenCode's local
 `~/.local/share/opencode/auth.json`. Connect an Anthropic API key in OpenCode
@@ -57,6 +63,12 @@ before using the command. Keep that file outside this repo.
 The shell loads `TINYFISH_API_KEY` from the macOS Keychain item
 `tinyfish-api-key` for the current user when the variable is empty. It preserves
 an existing value and leaves the variable unset if retrieval fails.
+
+To store the TinyFish key, run this command. Enter the value at the prompt.
+
+```sh
+security add-generic-password -a "$USER" -s tinyfish-api-key -w
+```
 
 ## Aliases
 
