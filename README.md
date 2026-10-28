@@ -3,6 +3,9 @@
 Mac setup: terminals, shell, prompt, and the FirstMate entry point.
 Plain files and symlinks - no nix, no package manager takeover.
 
+Setting up a second Mac? Read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md)
+for the harnesses, skills, plugins, MCP servers, hooks, keys and FirstMate.
+
 Inspired by [kunchenguid/dotfiles](https://github.com/kunchenguid/dotfiles), but
 deliberately **not** declarative. That repo's `homebrew.onActivation.cleanup = "zap"`
 uninstalls anything not on its list. This repo never removes a package.
@@ -15,6 +18,7 @@ home/.config/wezterm/wezterm.lua   WezTerm: rose-pine-moon look
 home/.config/ghostty/config        Ghostty: same look
 home/.config/herdr/config.toml     herdr: tmux-style keybindings (ctrl+b prefix)
 home/.config/starship.toml         prompt format
+home/.claude/skills/               Claude Code skills published from this Mac
 Brewfile                           full Homebrew state (brew bundle install)
 Brewfile.formulae                  top-level formulae only
 Brewfile.casks                     casks only

@@ -40,6 +40,8 @@ link ".config/starship.toml"
 link ".config/agents/AGENTS.md"
 link ".cursor/rules/jev-review.mdc"
 link ".claude/statusline.sh"
+link ".claude/skills/desktop-agent-workflows"
+link ".claude/skills/openrouter"
 link ".local/bin/openrouter"
 
 FIRSTMATE_ENV_MARKER="# firstmate global env (dotfiles-karan)"

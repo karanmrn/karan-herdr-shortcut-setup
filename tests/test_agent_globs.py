@@ -239,6 +239,27 @@ class AgentGlobsTest(unittest.TestCase):
         self.assertEqual(dest.lstat().st_ino, inode)
         self.assertEqual(list(self.home.glob(".zshenv.pre-dotfiles-*")), [])
 
+    def test_installer_links_published_claude_skills(self):
+        for name in ["desktop-agent-workflows", "openrouter"]:
+            with self.subTest(skill=name):
+                dest = self.home / ".claude/skills" / name
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.mkdir()
+                (dest / "SKILL.md").write_text("Existing skill\n")
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for name in ["desktop-agent-workflows", "openrouter"]:
+            with self.subTest(skill=name):
+                dest = self.home / ".claude/skills" / name
+                self.assertEqual(dest.readlink(), REPO / "home/.claude/skills" / name)
+                self.assertTrue((dest / "SKILL.md").is_file())
+                self.assertIn(f"ok     .claude/skills/{name}", result.stdout)
+                backups = list(dest.parent.glob(name + ".pre-dotfiles-*"))
+                self.assertEqual(len(backups), 1)
+                self.assertEqual((backups[0] / "SKILL.md").read_text(), "Existing skill\n")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

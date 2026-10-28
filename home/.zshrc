@@ -106,7 +106,7 @@ autoload -Uz compinit && compinit -C
 # <<< grok installer <<<
 
 # opencode
-export PATH=/Users/karanmanoharan/.opencode/bin:$PATH
+export PATH="$HOME/.opencode/bin:$PATH"
 
 # ---- kunchenguid/dotfiles setup (added 2026-07-25) ----
 export EDITOR="nvim"
