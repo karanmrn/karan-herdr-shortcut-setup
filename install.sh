@@ -7,7 +7,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 link() {
-  local src="$REPO/home/$1" dest="$HOME/$1"
+  local src="${2:-$REPO/home/$1}" dest="$HOME/$1"
 
   if [ ! -e "$src" ]; then
     echo "skip   $1 (not in repo)"
@@ -38,8 +38,28 @@ link ".config/ghostty/config"
 link ".config/herdr/config.toml"
 link ".config/starship.toml"
 link ".config/agents/AGENTS.md"
+link ".cursor/rules/jev-review.mdc"
 link ".claude/statusline.sh"
 link ".local/bin/openrouter"
+
+FIRSTMATE_ENV_MARKER="# firstmate global env (dotfiles-karan)"
+ZPROFILE="$HOME/.zprofile"
+touch "$ZPROFILE"
+if ! grep -qF "$FIRSTMATE_ENV_MARKER" "$ZPROFILE" 2>/dev/null; then
+  {
+    echo ""
+    echo "$FIRSTMATE_ENV_MARKER"
+    echo "[ -f \"\$HOME/.dotfiles-karan/home/firstmate-env.zsh\" ] && source \"\$HOME/.dotfiles-karan/home/firstmate-env.zsh\""
+  } >>"$ZPROFILE"
+  echo "append .zprofile (firstmate global env)"
+else
+  echo "ok     .zprofile firstmate hook"
+fi
+
+link ".claude/CLAUDE.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".codex/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".config/opencode/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".grok/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
 
 echo
 echo "Done. Open a new terminal tab to pick up shell changes."

@@ -38,12 +38,10 @@ running - `fm` detects it and will not nest a session inside a session.
 |---|---|---|
 | `fm` | FirstMate, in the workspace | Yes - supervised, gates on merges |
 | `cc` | plain Claude Code, wherever you are | **No - all prompts disabled** |
-| `co` | plain Codex, wherever you are | **No - full auto** |
+| `co` | plain Codex, wherever you are | **No - workspace-write sandbox** |
 
-`fm` is the normal way in. `cc` and `co` are escape hatches: they let an agent
-write files, run commands, and delete things without asking first. Two
-keystrokes, no safety net. Use them only when you are watching closely and the
-work is disposable.
+`fm` is the normal way in. See the [alias guidance](../README.md#aliases)
+for the permission settings of `cc` and `co`.
 
 ---
 
@@ -312,37 +310,13 @@ domain of work. You do not have one - with a single project you do not need one.
 
 # 5b. Running any model - the local proxy
 
-`cli-proxy-api` runs as a background service on `127.0.0.1:8317` and serves
-**~349 models**: all 345 OpenRouter models plus your Codex ones. Config lives at
-`/opt/homebrew/etc/cliproxyapi.conf`.
+See the [OpenRouter skill's terminal launcher guidance](../home/.claude/skills/openrouter/SKILL.md#this-desktops-terminal-launcher)
+for model discovery, launch commands, and routing limits. It also covers
+application integrations and links to detailed API references.
 
-This is completely independent of herdr and FirstMate. It works from any plain
-terminal.
-
-```sh
-openrouter                    # fuzzy picker over every model (fzf)
-openrouter deepseek           # jump straight to one
-openrouter grok-4.5           # Grok, via OpenRouter
-openrouter --list             # print all names
-openrouter --refresh          # re-fetch after OpenRouter adds models
-aim gemini-3.6-flash          # same, no picker
-```
-
-Inside Claude, `/openrouter` lists models and recommends ones for a given task.
-It cannot switch the current session's model - that is fixed once a session
-starts - so it hands you the command to start a new one.
-
-## Which model for what
-
-| Job | Try |
-|---|---|
-| Bulk edits, mechanical refactors | `deepseek-chat`, `qwen` variants |
-| Long-context reading | `gemini-3.6-flash` |
-| Reasoning-heavy analysis | `deepseek-r1` |
-| Free / throwaway | anything suffixed `:free` |
-
-These bill to **OpenRouter**, not to the Claude or Codex quotas - useful when
-either is running low.
+The launchers work independently of Herdr and FirstMate. Proxy configuration
+lives at `/opt/homebrew/etc/cliproxyapi.conf`. Check that configuration or an
+actual request before identifying the provider or billing route.
 
 ## What is NOT available
 
@@ -504,43 +478,31 @@ replace it, edit that one file - nothing else changes.
 
 # 9. The dotfiles repo
 
-`~/.dotfiles-karan`, a git repo, currently **local only** (not on GitHub).
-
-```
-home/.zshrc                        shell
-home/.config/wezterm/wezterm.lua   WezTerm look + leader keybindings
-home/.config/ghostty/config        Ghostty look
-home/.config/herdr/config.toml     herdr keybindings
-home/.config/starship.toml         prompt
-home/.config/agents/AGENTS.md      shared agent instructions
-Brewfile                           all taps/formulae/casks
-install.sh                         symlinks everything into place
-```
+See the [README](../README.md) for the repository contents and installation
+instructions. The normal checkout is `~/.dotfiles-karan`.
 
 ## Shared agent instructions
 
-`~/.config/agents/AGENTS.md` is one file, symlinked into three agents:
+`~/.config/agents/AGENTS.md` is one file, symlinked into four agents:
 
 | Agent | Reads |
 |---|---|
 | Codex | `~/.codex/AGENTS.md` -> shared file |
 | opencode | `~/.config/opencode/AGENTS.md` -> shared file |
 | grok | `~/.grok/AGENTS.md` -> shared file |
-| Claude | its own `~/.claude/CLAUDE.md` (standards mirrored) |
+| Claude | `~/.claude/CLAUDE.md` -> shared file |
 
-Edit the shared file once and all three change. Claude keeps a separate file
-because it also holds Claude-only skill routing (`ideate`, `graphify`), which
-means nothing to the others.
+Edit the shared file once and all four agents receive the same instructions.
 
-It contains the engineering standards merged from Kun's setup, plus the caveman
-response style that used to live only in the opencode file.
+The [shared instruction file](../home/.config/agents/AGENTS.md) owns the
+engineering rules, response style, skill lookup order, and Jev advisory policy.
+Skill discovery depends on the harness and its configured paths.
 
-**Skills do NOT cross harnesses.** Skills are a Claude Code feature living in
-`~/.claude/skills/`. Codex, grok, and opencode cannot see them. Only written
-instructions are portable, which is what the shared file is for.
-
-On a new Mac: clone it, run `./install.sh`, optionally
-`brew bundle install --file=Brewfile`. Done.
+`install.sh` also links the [Cursor Jev rule](../home/.cursor/rules/jev-review.mdc).
+It does not install shared Jev or TypeSafe skills or their harness aliases.
+`scripts/check-jev-routing.py` checks those existing links, credential literals,
+official TypeSafe content, and executable Codex skill discovery on an installed
+machine. It expects the live checkout at `~/.dotfiles-karan`.
 
 `install.sh` backs up any file it would overwrite and **never uninstalls
 packages**. That last point is deliberate: Kun's nix version sets Homebrew
