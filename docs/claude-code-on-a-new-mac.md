@@ -248,6 +248,7 @@ To store the TinyFish key in Keychain, run this command. It asks for the value.
 security add-generic-password -a "$USER" -s tinyfish-api-key -w
 ```
 
+Clone FirstMate as section 6 shows before creating `data/keys.env`.
 Create `claudex.env` and `keys.env` by hand on the new Mac. Then run
 `chmod 600` on each file. Do not send their contents through chat, email or a
 pull request.
@@ -267,8 +268,8 @@ pull request.
 9. Edit `~/.claude/settings.json` as section 5 shows: status line, marketplaces, plugins.
 10. Add the MCP servers from section 5 with `claude mcp add`.
 11. Install the shared skills into `~/.agents/skills` with the `skills` CLI.
-12. Store keys as section 7 shows: Keychain item, `claudex.env`, `keys.env`.
-13. Clone FirstMate: `gh repo clone karanmrn/firstmate ~/karan-agent-workspace`.
+12. Clone FirstMate: `gh repo clone karanmrn/firstmate ~/karan-agent-workspace`.
+13. Store keys as section 7 shows: Keychain item, `claudex.env`, `keys.env`.
 14. Run `herdr integration install claude`. Repeat with `codex` if you use Codex in Herdr.
 15. Start `herdr`, then type `fm`. Ask FirstMate to check its toolchain.
 
