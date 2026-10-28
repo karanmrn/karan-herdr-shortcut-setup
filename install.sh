@@ -7,7 +7,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 link() {
-  local src="$REPO/home/$1" dest="$HOME/$1"
+  local src="${2:-$REPO/home/$1}" dest="$HOME/$1"
 
   if [ ! -e "$src" ]; then
     echo "skip   $1 (not in repo)"
@@ -56,26 +56,10 @@ else
   echo "ok     .zprofile firstmate hook"
 fi
 
-link_global_agents() {
-  local src="$REPO/home/.config/agents/AGENTS.md"
-  local dest="$1"
-  mkdir -p "$(dirname "$dest")"
-  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
-    echo "ok     $dest"
-    return
-  fi
-  if [ -e "$dest" ] && [ ! -L "$dest" ]; then
-    mv "$dest" "$dest.pre-dotfiles-$STAMP"
-    echo "backup $(basename "$dest") in $(dirname "$dest")"
-  fi
-  ln -sf "$src" "$dest"
-  echo "link   $dest"
-}
-
-link_global_agents "$HOME/.claude/CLAUDE.md"
-link_global_agents "$HOME/.codex/AGENTS.md"
-link_global_agents "$HOME/.config/opencode/AGENTS.md"
-link_global_agents "$HOME/.grok/AGENTS.md"
+link ".claude/CLAUDE.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".codex/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".config/opencode/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
+link ".grok/AGENTS.md" "$REPO/home/.config/agents/AGENTS.md"
 
 echo
 echo "Done. Open a new terminal tab to pick up shell changes."

@@ -519,18 +519,16 @@ install.sh                         symlinks everything into place
 
 ## Shared agent instructions
 
-`~/.config/agents/AGENTS.md` is one file, symlinked into three agents:
+`~/.config/agents/AGENTS.md` is one file, symlinked into four agents:
 
 | Agent | Reads |
 |---|---|
 | Codex | `~/.codex/AGENTS.md` -> shared file |
 | opencode | `~/.config/opencode/AGENTS.md` -> shared file |
 | grok | `~/.grok/AGENTS.md` -> shared file |
-| Claude | its own `~/.claude/CLAUDE.md` (standards mirrored) |
+| Claude | `~/.claude/CLAUDE.md` -> shared file |
 
-Edit the shared file once and all three change. Claude keeps a separate file
-because it also holds Claude-only skill routing (`ideate`, `graphify`), which
-means nothing to the others.
+Edit the shared file once and all four agents receive the same instructions.
 
 It contains the engineering standards merged from Kun's setup, plus the caveman
 response style that used to live only in the opencode file.

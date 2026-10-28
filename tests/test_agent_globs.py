@@ -171,6 +171,61 @@ class AgentGlobsTest(unittest.TestCase):
                     self.assertEqual(original.read_text(), "# Existing link target\n")
                 backups[0].unlink()
 
+    def test_installer_preserves_instruction_aliases_and_is_idempotent(self):
+        aliases = [
+            ".claude/CLAUDE.md", ".codex/AGENTS.md",
+            ".config/opencode/AGENTS.md", ".grok/AGENTS.md",
+        ]
+        source = REPO / "home/.config/agents/AGENTS.md"
+        for state in ["absent", "file", "directory", "valid", "dangling", "correct"]:
+            with self.subTest(state=state), tempfile.TemporaryDirectory(dir=self.home) as scratch:
+                home = Path(scratch)
+                original = home / "previous-instructions.md"
+                if state == "valid":
+                    original.write_text("Existing instructions\n")
+                for relative in aliases:
+                    dest = home / relative
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    if state == "file":
+                        dest.write_text("Existing instructions\n")
+                    elif state == "directory":
+                        dest.mkdir()
+                        (dest / "instructions.md").write_text("Existing instructions\n")
+                    elif state in ["valid", "dangling"]:
+                        dest.symlink_to(original)
+                    elif state == "correct":
+                        dest.symlink_to(source)
+                inodes = {}
+                for _ in range(2):
+                    result = subprocess.run(
+                        ["/bin/bash", str(REPO / "install.sh")],
+                        env={"HOME": str(home), "PATH": "/usr/bin:/bin", "LC_ALL": "C"},
+                        cwd=home, capture_output=True, text=True, timeout=10,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    for relative in aliases:
+                        dest = home / relative
+                        self.assertTrue(dest.is_symlink())
+                        self.assertEqual(dest.readlink(), source)
+                        if relative in inodes:
+                            self.assertEqual(dest.lstat().st_ino, inodes[relative])
+                        inodes[relative] = dest.lstat().st_ino
+                        backups = list(dest.parent.glob(dest.name + ".pre-dotfiles-*"))
+                        self.assertEqual(len(backups), 0 if state in ["absent", "correct"] else 1)
+                        if state in ["valid", "dangling"]:
+                            self.assertTrue(backups[0].is_symlink())
+                            self.assertEqual(backups[0].readlink(), original)
+                            self.assertEqual(backups[0].exists(), state == "valid")
+                        elif state == "file":
+                            self.assertEqual(backups[0].read_text(), "Existing instructions\n")
+                        elif state == "directory":
+                            self.assertEqual(
+                                (backups[0] / "instructions.md").read_text(),
+                                "Existing instructions\n",
+                            )
+                    if state == "valid":
+                        self.assertEqual(original.read_text(), "Existing instructions\n")
+
     def test_installer_links_absent_destination_and_is_idempotent(self):
         dest = self.home / ".zshenv"
         dest.unlink(missing_ok=True)

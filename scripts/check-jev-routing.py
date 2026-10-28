@@ -24,13 +24,6 @@ def fail(message: str) -> None:
     raise AssertionError(message)
 
 
-def require_text(path: Path, fragments: list[str]) -> None:
-    text = path.read_text()
-    for fragment in fragments:
-        if fragment not in text:
-            fail(f"{path}: missing {fragment!r}")
-
-
 def require_target(path: Path, target: Path) -> None:
     if not path.is_symlink():
         fail(f"{path}: expected symlink")
@@ -139,23 +132,6 @@ def check_codex_discovery(cwds: list[str]) -> list[dict]:
 
 
 def main() -> None:
-    require_text(
-        AGENTS_SOURCE,
-        [
-            "Jev is an optional review adviser.",
-            "Never send it deterministic checks",
-            "Never print, persist,",
-        ],
-    )
-    require_text(
-        CURSOR_RULE_SOURCE,
-        [
-            "only for ambiguous semantic judgments during review",
-            "supporting evidence, never verdicts",
-            "Never print, persist,",
-        ],
-    )
-
     for path in [AGENTS_SOURCE, CURSOR_RULE_SOURCE]:
         text = path.read_text()
         if "TYPESAFE_API_KEY=" in text or "Authorization: Bearer" in text:

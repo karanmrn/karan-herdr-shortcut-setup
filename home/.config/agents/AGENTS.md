@@ -1,8 +1,6 @@
 # Global agent instructions
 
-Shared by Codex, opencode, and grok via symlink. Claude Code keeps its own
-`~/.claude/CLAUDE.md` because it also holds Claude-only skill routing, but the
-engineering standards below are mirrored there.
+Shared by Claude Code, Codex, opencode, and grok via symlink.
 
 Source of truth: `~/.dotfiles-karan/home/.config/agents/AGENTS.md`
 
