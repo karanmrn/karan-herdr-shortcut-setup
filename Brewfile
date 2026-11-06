@@ -75,6 +75,8 @@ cask "codexbar"
 cask "font-hack-nerd-font"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
+# Discover, download, and run local LLMs
+cask "lm-studio"
 # Modern Go client + CLI for the Google Places API (New).
 cask "openclaw/tap/goplaces", trusted: true
 # Whisper dictation/transcription app
