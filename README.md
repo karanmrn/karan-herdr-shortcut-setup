@@ -3,8 +3,15 @@
 Mac setup: terminals, shell, prompt, and the FirstMate entry point.
 Plain files and symlinks - no nix, no package manager takeover.
 
-Setting up a second Mac? Read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md)
-for the harnesses, skills, plugins, MCP servers, hooks, keys and FirstMate.
+Setting up a second Mac? Read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md).
+It covers:
+
+- the harnesses, plugins, MCP servers and hooks
+- the [skill policy and kstack](docs/claude-code-on-a-new-mac.md#4-skills)
+- the [response style](docs/claude-code-on-a-new-mac.md#response-style), with caveman off
+- [FirstMate, Herdr, treehouse and no-mistakes](docs/claude-code-on-a-new-mac.md#6-firstmate-and-herdr)
+- [models](docs/claude-code-on-a-new-mac.md#7-models): Opus-only crew routing, `/openrouter` and LM Studio
+- [keys](docs/claude-code-on-a-new-mac.md#8-keys-and-secrets) and the [daily update](docs/claude-code-on-a-new-mac.md#9-daily-update)
 
 Inspired by [kunchenguid/dotfiles](https://github.com/kunchenguid/dotfiles), but
 deliberately **not** declarative. That repo's `homebrew.onActivation.cleanup = "zap"`
@@ -50,11 +57,17 @@ its appearance in cmux Settings directly.
 
 ## Secrets are not in this repo
 
-`~/.config/secrets/claudex.env` holds `ANTHROPIC_AUTH_TOKEN` for `claudex`,
-`aim` and `openrouter` (mode 600). It is intentionally outside this repo and
-must never be committed. On a new machine, recreate it by hand with an
-`export ANTHROPIC_AUTH_TOKEN='your-local-proxy-token'` assignment. Replace the
-placeholder with your token, then run `chmod 600 ~/.config/secrets/claudex.env`.
+Fleet keys live in `~/karan-agent-workspace/data/keys.env` (mode 600), one
+`NAME=value` per line. See
+[Keys and secrets](docs/claude-code-on-a-new-mac.md#8-keys-and-secrets).
+
+`~/.config/secrets/claudex.env` held `ANTHROPIC_AUTH_TOKEN` for `claudex`,
+`aim` and the older `openrouter` launcher. These commands need the local
+proxy, which the main Mac no longer runs. Create the file only if you run
+that proxy. It is intentionally outside this repo and must never be committed.
+Put an `export ANTHROPIC_AUTH_TOKEN='your-local-proxy-token'` assignment in
+it, replace the placeholder with your token, then run
+`chmod 600 ~/.config/secrets/claudex.env`.
 
 `claude-pubmaxx` reads an Anthropic API key from OpenCode's local
 `~/.local/share/opencode/auth.json`. Connect an Anthropic API key in OpenCode

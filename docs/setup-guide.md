@@ -303,6 +303,11 @@ domain of work. You do not have one - with a single project you do not need one.
 
 # 5b. Running any model - the local proxy
 
+The main Mac no longer runs this proxy. The `/openrouter` skill from kstack
+now calls OpenRouter directly, and LM Studio runs local models. See
+[Models](claude-code-on-a-new-mac.md#7-models). The rest of this section
+describes the older proxy setup.
+
 See the [OpenRouter skill's terminal launcher guidance](../home/.claude/skills/openrouter/SKILL.md#this-desktops-terminal-launcher)
 for model discovery, launch commands, and routing limits. It also covers
 application integrations and links to detailed API references.

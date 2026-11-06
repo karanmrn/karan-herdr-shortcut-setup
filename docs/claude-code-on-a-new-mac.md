@@ -4,8 +4,10 @@ This guide explains how Claude Code (`cc`) runs on the main Mac. Use it to set
 up a second Mac, such as a MacBook Air, the same way.
 
 The facts come from this repository, `~/.claude/settings.json`, the installed
-plugins under `~/.claude/plugins`, and the
+plugins under `~/.claude/plugins`, the FirstMate home in `~/karan-agent-workspace`,
+and the
 [desktop-agent-workflows skill](../home/.claude/skills/desktop-agent-workflows/SKILL.md).
+They were last checked on the main Mac (the Mac Studio) on 6 Nov 2026.
 Read the [setup guide](setup-guide.md) for terminals, keyboard shortcuts and
 the FirstMate roles.
 
@@ -38,17 +40,23 @@ These harnesses and tools are installed and configured on the main Mac.
 | Herdr | `brew install herdr` | Terminal workspaces for agents |
 | GitHub CLI | `brew install gh` | Run `gh auth login` once |
 | WezTerm | `brew install --cask wezterm` | Main terminal app |
-| cliproxyapi | `brew install cliproxyapi` | Local model proxy on port 8317 |
+| LM Studio | `brew install --cask lm-studio` | Local models, see [section 7](#7-models) |
 | Starship, zsh plugins | in the `Brewfile` | Prompt and shell |
 
 Other harnesses also have shared instructions linked by `install.sh`:
 opencode (`~/.opencode/bin`) and grok (`~/.grok/bin`). Install them only if you
-use them.
+use them. The main Mac also has `cursor-agent`, `pi` and `hermes` in
+`~/.local/bin`. Kimi is not installed on the main Mac.
 
 The AXI command-line tools are in `~/.local/bin`: `gh-axi`, `chrome-devtools-axi`,
 `quota-axi` and `tasks-axi`. `treehouse` (worktree pool) is also there.
 `no-mistakes` (the PR validation pipeline) lives in `~/.no-mistakes/bin`.
 FirstMate offers to install the tools that it needs, after you approve.
+
+The main Mac no longer runs `cliproxyapi`, the local model proxy on port 8317.
+It stays in the `Brewfile` because this repo never removes a package. You do
+not need it on a new Mac. See [section 7](#7-models) for the commands that
+still expect it.
 
 `jq` comes with macOS at `/usr/bin/jq`. The status line and the model
 launchers need it.
@@ -82,6 +90,10 @@ links:
 One file, `AGENTS.md`, gives Claude Code, Codex, opencode and grok the same
 engineering rules. Edit it once and every harness reads the change.
 
+The `openrouter` links come from an older setup that used the local proxy.
+On the main Mac, `~/.claude/skills/openrouter` now points to the kstack copy in
+`~/.agents/skills/openrouter`. See [section 7](#7-models).
+
 `install.sh` also adds one hook line to `~/.zprofile`. That line loads
 `home/firstmate-env.zsh`, which sets `FM_WORKSPACE`, `FM_HOME` and `FM_BACKEND`.
 The hook expects the repo at `~/.dotfiles-karan`. Clone it there.
@@ -97,36 +109,67 @@ A skill is a folder with a `SKILL.md` playbook. The
 [shared agent instructions](../home/.config/agents/AGENTS.md#engineering-skills)
 define the skill lookup order.
 
-On the main Mac, `~/.agents/skills/` holds the catalogue, about 300 skills.
-Most entries in `~/.claude/skills/` are symlinks into `~/.agents/skills/`, so
-Claude Code and Codex see the same skills.
+### The skill policy
 
-The `skills` CLI installs these skills from GitHub, for example
-`npx skills add -g <owner>/<repo>`. The `-g` flag makes the installation
-available across projects. Select Claude Code and Codex when prompted.
-See the [CLI installation reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-add).
-It records each global source in `~/.agents/.skill-lock.json`.
-The largest sources are:
+The fleet uses a lean skill policy. It keeps the skills from five families,
+plus a short list of approved extras:
 
-| Source | Examples |
+| Family | Source repo |
 |---|---|
-| `backnotprop/pstack` | `architect`, `council` |
-| `mattpocock/skills` | `tdd`, `grilling`, `codebase-design` |
-| `addyosmani/agent-skills` | `code-review-and-quality`, `context-engineering` |
-| `obra/superpowers` | `brainstorming`, `systematic-debugging` |
-| `emilkowalski/skills` | `animate`, `emil-design-eng` |
-| `kunchenguid/*` | `no-mistakes`, `quota-axi`, `tasks-axi`, `vision` |
+| Addy Osmani | `addyosmani/agent-skills` |
+| pstack | `backnotprop/pstack` |
+| tstack | `t3dotgg/tstack` |
+| Matt Pocock | `mattpocock/skills` |
+| Kun Chen | `kunchenguid/*`, for example `no-mistakes`, `quota-axi`, `tasks-axi` |
 
-To copy the catalogue, copy `~/.agents/.skill-lock.json` from the main Mac.
-Then install each source again with `npx skills add -g <owner>/<repo>`.
+[kstack](https://github.com/karanmrn/kstack) is the published pack of these
+five families. It also holds the fleet's own workflow skills, such as
+`openrouter`, `delegate-to-model` and `supervise-agent-fleet`.
 
-This repo publishes two skills of its own:
+`asd-ste100` is one approved extra. It sets the response style, see
+[Response style](#response-style). The duplicate skills from
+`kunchenguid/grok-ship` are removed. Three grok-ship skills that have no
+duplicate stay installed: `ahoy`, `14-day-stale-pr-close` and
+`vision-md-triage-verdict`.
 
-- `desktop-agent-workflows` explains the terminals, launchers, Herdr and FirstMate.
-- `openrouter` explains the local model proxy and OpenRouter integrations.
+### Install the skills
 
-On the main Mac these two skills are real folders in `~/.agents/skills/`. A new
-Mac gets them from `install.sh` as links under `~/.claude/skills/` into this repo.
+The `skills` CLI installs skills from GitHub into `~/.agents/skills/` and
+records each source in `~/.agents/.skill-lock.json`. The `-g` flag makes the
+installation available across projects. See the
+[CLI installation reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-add).
+
+Install kstack, then the style skill:
+
+```sh
+npx skills add -g karanmrn/kstack
+npx skills add -g danyuchn/asd-ste100-skill
+```
+
+To see the skills before you install them, add `--list`. When the CLI asks for
+agents, select every harness that you use.
+
+### Where each harness finds the skills
+
+`~/.agents/skills/` is the one real copy. Each harness has a skills folder
+with a symlink per skill into `~/.agents/skills/`:
+
+| Harness | Skills folder |
+|---|---|
+| Claude Code | `~/.claude/skills/` |
+| Codex | `~/.codex/skills/` |
+| Cursor | `~/.cursor/skills/` |
+| opencode | `~/.config/opencode/skills/` |
+| pi | `~/.pi/agent/skills/` |
+| grok | `~/.grok/skills/` |
+| hermes | `~/.hermes/skills/` |
+
+If you install kimi, link its skills folder in the same way.
+
+### Skills from this repo and from FirstMate
+
+This repo publishes `desktop-agent-workflows`. It explains the terminals,
+launchers, Herdr and FirstMate. `install.sh` links it into `~/.claude/skills/`.
 
 The FirstMate workspace brings its own skills in
 `~/karan-agent-workspace/.agents/skills/`.
@@ -162,13 +205,31 @@ with `/plugin` inside Claude Code.
 
 | Marketplace | Source | Plugin | Enabled |
 |---|---|---|---|
-| `caveman` | `JuliusBrussee/caveman` | `caveman` | yes |
+| `caveman` | `JuliusBrussee/caveman` | `caveman` | no |
 | `openai-codex` | `openai/codex-plugin-cc` | `codex` | yes |
 | `compact-adviser` | `kunchenguid/compact-adviser` | `compact-adviser` | no |
 | `typesafe-ai` | `typesafe-ai/skills` | `typesafe` | no |
 | `mattpocock` | `mattpocock/skills` | `mattpocock-skills` | no |
 | `ecc` | `affaan-m/everything-claude-code` | `ecc` | no |
 | `compound-engineering-plugin` | `EveryInc/compound-engineering-plugin` | `compound-engineering` | no |
+
+Only `codex` is enabled. The other plugins are installed but turned off in
+`enabledPlugins`.
+
+### Response style
+
+Agents answer in plain English that follows the `asd-ste100` skill
+(Simplified Technical English). The rule is in the
+[shared agent instructions](../home/.config/agents/AGENTS.md#response-style-simplified-technical-english),
+so every harness gets it through `install.sh`.
+
+This style replaces the caveman style. Keep the caveman plugin turned off:
+
+```json
+{
+  "enabledPlugins": { "caveman@caveman": false }
+}
+```
 
 ### MCP servers
 
@@ -230,65 +291,186 @@ FirstMate adds its own hooks inside each worker worktree in
 ## 6. FirstMate and Herdr
 
 FirstMate is the repo `karanmrn/firstmate`, a fork of `kunchenguid/firstmate`.
-It is not an app. The cloned repo is the coordinator.
+It is not an app. The cloned repo is the coordinator, and its folder is the
+FirstMate home.
 
 ```sh
 gh repo clone karanmrn/firstmate ~/karan-agent-workspace
 ```
+
+`gh repo clone` adds the parent repo as the `upstream` remote. The main Mac
+merges upstream changes into the fork. To check the remotes, run
+`git -C ~/karan-agent-workspace remote -v`.
 
 How the captain uses it:
 
 1. Open WezTerm and start Herdr with `herdr`.
 2. Type `fm`. It changes to `~/karan-agent-workspace` and starts Claude Code.
 3. Talk to FirstMate. It plans and sends tasks to crewmates.
-4. Each crewmate runs in its own Herdr tab and git worktree.
+4. Each crewmate runs in its own Herdr pane, in a git worktree from the
+   treehouse pool.
 5. FirstMate reports finished pull requests to you. You decide merges.
 
-`config/backend` in the workspace selects `herdr`. The Herdr prefix key is
-Ctrl+B. See the [Herdr shortcuts](setup-guide.md#herdr-panes-and-workspaces-inside-the-terminal).
+The parts:
+
+| Part | What it does | Check on the Mac |
+|---|---|---|
+| Herdr | Runs FirstMate and each crewmate in panes. `config/backend` in the home selects `herdr`. | `herdr --version` |
+| treehouse | Keeps a pool of reusable git worktrees, one per crewmate, under `~/.treehouse/`. | `treehouse --version` |
+| no-mistakes | Validates a branch before it becomes a PR: review, tests, lint, push and CI. One daemon serves every lane. | `no-mistakes daemon status` |
+| Herdr integrations | Hooks that tell Herdr the agent state. | `herdr integration status` |
+
+Only FirstMate manages the no-mistakes daemon. Do not stop, restart or update
+it while a pipeline run is active.
+
+The Herdr prefix key is Ctrl+B. See the
+[Herdr shortcuts](setup-guide.md#herdr-panes-and-workspaces-inside-the-terminal).
 
 FirstMate state, such as briefs, status files and task data, stays in the
 workspace. It is not part of this repo.
 
 ---
 
-## 7. Keys and secrets
+## 7. Models
 
-Follow the [README secret-storage instructions](../README.md#secrets-are-not-in-this-repo)
-for the TinyFish key, proxy token and `claude-pubmaxx` API key. Additional
-credentials used by the agent tools are:
+### Crewmates run on Claude Opus 5.5
 
-| Secret | Where it lives | Read by |
-|---|---|---|
-| `TYPESAFE_API_KEY` | environment or Keychain | Jev and TypeSafe skills |
-| Fleet keys | `~/karan-agent-workspace/data/keys.env`, mode 600 | FirstMate and crewmates |
+`config/crew-dispatch.json` in the FirstMate home chooses the harness and model
+for each crewmate. On the main Mac, every rule and the default use the same
+route:
 
-`data/keys.env` is one `NAME=value` per line. The FirstMate repo ignores the
-`data/` folder, so the file is never committed.
+```json
+{ "harness": "claude", "model": "claude-opus-5-5" }
+```
 
-Clone FirstMate as section 6 shows before creating `data/keys.env`.
-Create `keys.env` by hand on the new Mac. Then run `chmod 600` on the file.
-Do not send credentials through chat, email or a pull request.
+To check the routes, run:
+
+```sh
+jq -c '[.rules[].use, .default] | unique' ~/karan-agent-workspace/config/crew-dispatch.json
+```
+
+The output must be `[{"harness":"claude","model":"claude-opus-5-5"}]`, one route.
+
+### OpenRouter
+
+The `/openrouter` skill comes from kstack. Its script,
+`~/.agents/skills/openrouter/scripts/openrouter`, calls
+`https://openrouter.ai/api/v1` directly. It needs only `python3`. It does not
+use `cli-proxy-api`.
+
+| Command | Cost |
+|---|---|
+| `openrouter list [filter]` | free |
+| `openrouter launch <model>` | free, prints a command for a new session |
+| `openrouter ask <model> "<prompt>"` | spends OpenRouter credit |
+| `openrouter compare <m1> <m2> "<prompt>"` | spends OpenRouter credit |
+
+The script reads `OPENROUTER_API_KEY` from the environment. If that is empty, it
+reads the file named by `OPENROUTER_KEY_FILE`. The key lives in
+`data/keys.env`, see [section 8](#8-keys-and-secrets).
+
+To check the script without a key, run:
+
+```sh
+python3 ~/.agents/skills/openrouter/scripts/openrouter list opus
+```
+
+The `openrouter` command on `PATH` (`~/.local/bin/openrouter`, linked by
+`install.sh`) is the older launcher. It and the `claudex` and `aim` shell
+functions need the local proxy and `~/.config/secrets/claudex.env`. The main
+Mac has neither, so these three commands do not work there. Use the kstack
+script instead.
+
+### LM Studio and local models
+
+LM Studio 0.4.28 is installed from the Homebrew cask. Its command-line tool is
+`lms`, in `~/.lmstudio/bin`. The main Mac has two local chat models:
+
+| Model | Download command |
+|---|---|
+| Qwen3.8-27B | `lms get qwen/qwen3.8-27b` |
+| Qwen3.6-35B-A3B | `lms get qwen/qwen3.6-35b-a3b` |
+
+Together they use about 38 GB of disk space. To see the installed models, run
+`lms ls`.
+
+`~/.lmstudio` holds the models, settings and `lms`. Keep it. Do not delete it
+during a disk clean-up.
 
 ---
 
-## 8. First hour on the MacBook Air
+## 8. Keys and secrets
+
+Follow the [README secret-storage instructions](../README.md#secrets-are-not-in-this-repo)
+for the TinyFish key and the `claude-pubmaxx` API key. Additional credentials
+used by the agent tools are:
+
+| Secret | Where it lives | Read by |
+|---|---|---|
+| `TYPESAFE_API_KEY` | `data/keys.env`, environment or Keychain | Jev and TypeSafe skills |
+| `OPENROUTER_API_KEY` | `data/keys.env` | the `/openrouter` skill |
+| Other fleet keys | `~/karan-agent-workspace/data/keys.env`, mode 600 | FirstMate and crewmates |
+
+`data/keys.env` is one `NAME=value` per line. The FirstMate repo ignores the
+`data/` folder, so the file is never committed. To see which keys are set
+without their values, run:
+
+```sh
+cut -d= -f1 ~/karan-agent-workspace/data/keys.env
+```
+
+Clone FirstMate as section 6 shows before creating `data/keys.env`.
+Create `keys.env` by hand on the new Mac. Then run `chmod 600` on the file.
+Do not send credentials through chat, email or a pull request. Write key names
+in documents, never key values.
+
+---
+
+## 9. Daily update
+
+The daily update script is `scripts/update-all.sh` in the
+[mac-studio-setup](https://github.com/karanmrn/mac-studio-setup) repo. On the
+main Mac the clone is `~/mac-studio-setup`.
+
+```sh
+gh repo clone karanmrn/mac-studio-setup ~/mac-studio-setup
+~/mac-studio-setup/scripts/update-all.sh
+```
+
+The script updates Homebrew packages, npm globals, the self-updating CLIs,
+skills, gstack, Claude Code plugins and FirstMate. It writes its log to
+`~/karan-agent-workspace/data/deck/update-all.log`, not to the terminal.
+
+The script does not update no-mistakes while `no-mistakes axi status` reports a
+running pipeline, because the update would stop that run.
+
+On the main Mac, the LaunchAgent `com.firstmate.update-all` runs a script every
+day at 06:30. It runs the copy in
+`~/karan-agent-workspace/data/deck/update-all.sh`, not the repo copy. That copy
+does not skip the no-mistakes update. Point a new Mac's LaunchAgent at the repo
+copy.
+
+---
+
+## 10. First hour on the MacBook Air
 
 1. Install Homebrew, then run `brew install gh git node`.
 2. Run `gh auth login`.
 3. Clone this repo: `gh repo clone karanmrn/karan-herdr-shortcut-setup ~/.dotfiles-karan`.
 4. Run `~/.dotfiles-karan/install.sh`. Read the `backup` lines it prints.
-5. Run `brew install --cask claude-code@latest wezterm` and `brew install herdr starship zsh-autosuggestions zsh-syntax-highlighting`.
+5. Run `brew install --cask claude-code@latest wezterm lm-studio` and `brew install herdr starship zsh-autosuggestions zsh-syntax-highlighting`.
 6. Run `npm config set prefix ~/.local`, then `npm install -g @openai/codex`.
-7. Open a new WezTerm tab. Check that `type cc fm aim` finds all three.
+7. Open a new WezTerm tab. Check that `type cc fm` finds both.
 8. Run `claude` once and sign in.
-9. Edit `~/.claude/settings.json` as section 5 shows: status line, marketplaces, plugins.
+9. Edit `~/.claude/settings.json` as section 5 shows: status line, marketplaces, plugins, caveman off.
 10. Follow section 5 to install MemPalace, register all four MCP servers in user scope, and authenticate the HTTP servers.
-11. Install each shared skill source with `npx skills add -g <owner>/<repo>` as section 4 shows.
+11. Install kstack and `asd-ste100` as section 4 shows.
 12. Clone FirstMate: `gh repo clone karanmrn/firstmate ~/karan-agent-workspace`.
-13. Store keys as section 7 shows: Keychain item, `claudex.env`, `keys.env`.
+13. Store keys as section 8 shows: Keychain item and `keys.env`.
 14. Run `herdr integration install claude`. Repeat with `codex` if you use Codex in Herdr.
-15. Start `herdr`, then type `fm`. Ask FirstMate to check its toolchain.
+15. Download the local models with `lms get`, as section 7 shows.
+16. Clone `mac-studio-setup` and run the daily update once, as section 9 shows.
+17. Start `herdr`, then type `fm`. Ask FirstMate to check its toolchain and its crew routing.
 
 Ask FirstMate to identify any missing tools, skills or authentication before
 starting project work. A reply alone does not confirm that the setups match.
