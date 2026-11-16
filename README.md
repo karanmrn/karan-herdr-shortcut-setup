@@ -20,6 +20,7 @@ uninstalls anything not on its list. This repo never removes a package.
 ## What's here
 
 ```
+home/.zshenv                       noninteractive shell PATH
 home/.zshrc                        shell: aliases, prompt, fm entry point
 home/.config/wezterm/wezterm.lua   WezTerm: rose-pine-moon look
 home/.config/ghostty/config        Ghostty: same look
@@ -41,9 +42,13 @@ cd ~/.dotfiles-karan
 brew bundle install --file=Brewfile   # optional: restore all packages
 ```
 
+The new Mac guide lists additional installed agent tools and their installation pages.
+
 `install.sh` backs up replaced files, directories, and symlinks to
 `<file>.pre-dotfiles-YYYYMMDD-HHMMSS`, then creates symlinks. Editing `~/.zshrc`
-edits the file in this repo. The installer also appends a FirstMate environment
+edits the file in this repo. The tracked `.zshenv` sets the live PATH and retains
+zsh's default unmatched-glob behaviour, including for agents. Quote glob patterns
+when they must reach a command unchanged. The installer also appends a FirstMate environment
 hook to `~/.zprofile` once. It preserves the existing profile content.
 
 ## The look
