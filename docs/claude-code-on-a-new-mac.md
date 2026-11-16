@@ -43,10 +43,21 @@ These harnesses and tools are installed and configured on the main Mac.
 | LM Studio | `brew install --cask lm-studio` | Local models, see [section 7](#7-models) |
 | Starship, zsh plugins | in the `Brewfile` | Prompt and shell |
 
-Other harnesses also have shared instructions linked by `install.sh`:
-opencode (`~/.opencode/bin`) and grok (`~/.grok/bin`). Install them only if you
-use them. The main Mac also has `cursor-agent`, `pi` and `hermes` in
-`~/.local/bin`. Kimi is not installed on the main Mac.
+The main Mac also has these agent tools. Install each tool you need from its
+publisher's instructions. The dotfiles installer does not install them.
+
+| Tool | Installation source | Main Mac command |
+|---|---|---|
+| Oh My Pi | [Oh My Pi](https://github.com/can1357/oh-my-pi) | `omp` |
+| Devin CLI | [Devin CLI](https://devin.ai/cli) | `devin` |
+| Hermes Agent | [Hermes installation](https://hermes-agent.nousresearch.com/docs/getting-started/installation) | `hermes` |
+| T3 Code | [T3 Code](https://github.com/pingdotgg/t3code) | `t3` |
+| Muse Code | [Muse Code](https://dev.meta.ai/docs/muse-code) | `muse` |
+| Pi | `npm install -g @earendil-works/pi-coding-agent` | `pi` |
+| Grok | `npm install -g @xai-official/grok` | `grok` |
+
+The main Mac also has `opencode` and `cursor-agent`. The installer links shared
+instructions for opencode and grok. It does not configure the other tools.
 
 The AXI command-line tools are in `~/.local/bin`: `gh-axi`, `chrome-devtools-axi`,
 `quota-axi` and `tasks-axi`. `treehouse` (worktree pool) is also there.

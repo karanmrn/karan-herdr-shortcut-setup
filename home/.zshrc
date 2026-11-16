@@ -169,6 +169,11 @@ if [ -z "$TINYFISH_API_KEY" ]; then
     && export TINYFISH_API_KEY || unset TINYFISH_API_KEY
 fi
 
+# Additional CLI paths used on the main Mac.
+export PATH="$PATH:$HOME/.lmstudio/bin"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.codeium/windsurf/bin:$PATH"
+
 # syntax highlighting must be sourced last
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # ------------------------------------------------------
