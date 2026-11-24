@@ -107,7 +107,7 @@ On the main Mac, `~/.claude/skills/openrouter` now points to the kstack copy in
 
 `install.sh` also adds one hook line to `~/.zprofile`. That line loads
 `home/firstmate-env.zsh`, which sets `FM_WORKSPACE`, `FM_HOME` and `FM_BACKEND`.
-The hook expects the repo at `~/.dotfiles-karan`. Clone it there.
+The hook sources `~/.config/firstmate/env.zsh`, which the installer links to the checkout.
 
 `install.sh` does not write `~/.claude/settings.json`. Section 5 tells you what
 to set by hand.

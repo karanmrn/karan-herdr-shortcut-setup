@@ -11,7 +11,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 class AgentGlobsTest(unittest.TestCase):
     def setUp(self):
-        self.scratch = tempfile.TemporaryDirectory(prefix="agent-globs-", dir=REPO)
+        self.scratch = tempfile.TemporaryDirectory(prefix="agent-globs-")
         self.addCleanup(self.scratch.cleanup)
         self.home = Path(self.scratch.name)
         source = REPO / "home/.zshenv"
@@ -141,6 +141,17 @@ class AgentGlobsTest(unittest.TestCase):
         self.assertIn("ok     .zshenv", result.stdout)
         self.assertEqual(dest.lstat().st_ino, inode)
         self.assertEqual(list(self.home.glob(".zshenv.pre-dotfiles-*")), [])
+
+    def test_firstmate_login_environment_works_outside_default_clone(self):
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        command = '. "$HOME/.zprofile"; printf "%s\\n" "$FM_WORKSPACE" "$FM_BACKEND"'
+        result = self.shell(command)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, f"{self.home}/karan-agent-workspace\nherdr\n")
+        self.assertEqual((self.home / ".zprofile").read_text().count("# firstmate portable env"), 1)
 
     def test_installer_links_published_claude_skills(self):
         for name in ["desktop-agent-workflows", "openrouter"]:
