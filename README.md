@@ -3,7 +3,9 @@
 Mac setup: terminals, shell, prompt, and the FirstMate entry point.
 Plain files and symlinks - no nix, no package manager takeover.
 
-Setting up a second Mac? Read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md).
+Setting up a new Mac? Start with [Install with an agent](INSTALL-WITH-AN-AGENT.md).
+
+For background, read [Claude Code on a new Mac](docs/claude-code-on-a-new-mac.md).
 It covers:
 
 - the harnesses, plugins, MCP servers and hooks
