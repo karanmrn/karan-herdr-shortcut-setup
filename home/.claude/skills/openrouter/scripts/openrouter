@@ -1,0 +1,403 @@
+#!/usr/bin/env python3
+"""openrouter - list, ask, compare and launch OpenRouter models.
+
+Commands:
+  list [filter]                    Show models: id, context, prices, free marker. No credit.
+  ask <model> <prompt|->           Stream one reply. Print tokens and cost to stderr.
+  compare <m1> <m2> <prompt|->     Send one prompt to two models. Show the replies side by side.
+  launch <model> [--tool T]        Print the command that starts a coding session on the model.
+
+A prompt of "-" is read from standard input.
+ask and compare spend OpenRouter credit. list and launch do not.
+
+Key: OPENROUTER_API_KEY in the environment, else the file named by
+OPENROUTER_KEY_FILE. The file holds the bare key, or a line
+OPENROUTER_API_KEY=<key> as in a .env file.
+The tool never prints the key.
+
+OPENROUTER_BASE_URL changes the API root (default https://openrouter.ai/api/v1).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import shutil
+import sys
+import textwrap
+import threading
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
+KEY_VAR = "OPENROUTER_API_KEY"
+KEY_FILE_VAR = "OPENROUTER_KEY_FILE"
+TIMEOUT = 300
+TOOLS = ("claude", "codex", "env")
+
+
+class CliError(Exception):
+    """An error that the CLI reports as one line, then exits 1."""
+
+
+# Configuration --------------------------------------------------------------
+
+
+def base_url() -> str:
+    return os.environ.get("OPENROUTER_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
+
+
+def key_from_text(text: str) -> str | None:
+    for line in text.splitlines():
+        match = re.match(rf"^\s*(?:export\s+)?{KEY_VAR}\s*=\s*(.*?)\s*$", line)
+        if match:
+            value = match.group(1)
+            if len(value) > 1 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            return value or None
+    lines = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    if len(lines) == 1 and "=" not in lines[0] and " " not in lines[0]:
+        return lines[0]
+    return None
+
+
+def api_key() -> str:
+    key = os.environ.get(KEY_VAR, "").strip()
+    if key:
+        return key
+    path = os.environ.get(KEY_FILE_VAR, "").strip()
+    if not path:
+        raise CliError(f"no API key: set {KEY_VAR}, or set {KEY_FILE_VAR} to a file that holds it")
+    try:
+        text = Path(path).expanduser().read_text(encoding="utf-8")
+    except OSError as error:
+        raise CliError(f"cannot read {KEY_FILE_VAR} file {path}: {error.strerror}") from None
+    key = key_from_text(text)
+    if not key:
+        raise CliError(f"{KEY_FILE_VAR} file {path} has no {KEY_VAR}=<key> line and is not a bare key")
+    return key
+
+
+# HTTP -----------------------------------------------------------------------
+
+
+def request(path: str, payload: dict | None = None, key: str | None = None) -> urllib.request.Request:
+    headers = {"Accept": "application/json", "X-Title": "kstack openrouter"}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    data = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode("utf-8")
+    return urllib.request.Request(base_url() + path, data=data, headers=headers)
+
+
+def api_error(error: urllib.error.HTTPError) -> CliError:
+    detail = ""
+    try:
+        body = json.loads(error.read().decode("utf-8", errors="replace"))
+        detail = body.get("error", {}).get("message", "") if isinstance(body, dict) else ""
+    except (ValueError, OSError):
+        pass
+    hints = {401: "the API key is not valid", 402: "the account has no credit left", 429: "rate limited, try later"}
+    message = detail or hints.get(error.code, error.reason)
+    return CliError(f"OpenRouter returned HTTP {error.code}: {message}")
+
+
+def open_url(req: urllib.request.Request):
+    try:
+        return urllib.request.urlopen(req, timeout=TIMEOUT)
+    except urllib.error.HTTPError as error:
+        raise api_error(error) from None
+    except urllib.error.URLError as error:
+        raise CliError(f"cannot reach {base_url()}: {error.reason}") from None
+
+
+def fetch_models() -> list[dict]:
+    with open_url(request("/models")) as response:
+        return json.load(response).get("data", [])
+
+
+def stream_chat(key: str, model: str, prompt: str, max_tokens: int | None, on_text) -> dict:
+    """Stream one chat completion. Call on_text for each text delta. Return usage."""
+    payload: dict = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": True,
+        "usage": {"include": True},
+    }
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
+    usage: dict = {}
+    with open_url(request("/chat/completions", payload, key)) as response:
+        for raw in response:
+            line = raw.decode("utf-8", errors="replace").strip()
+            if not line.startswith("data:"):
+                continue
+            data = line[5:].strip()
+            if data == "[DONE]":
+                break
+            try:
+                chunk = json.loads(data)
+            except ValueError:
+                continue
+            if "error" in chunk:
+                message = chunk["error"].get("message", "unknown error") if isinstance(chunk["error"], dict) else chunk["error"]
+                raise CliError(f"{model}: {message}")
+            for choice in chunk.get("choices") or []:
+                text = (choice.get("delta") or {}).get("content")
+                if text:
+                    on_text(text)
+            if chunk.get("usage"):
+                usage = chunk["usage"]
+    return usage
+
+
+# Formatting -----------------------------------------------------------------
+
+
+def per_million(value) -> float | None:
+    try:
+        price = float(value)
+    except (TypeError, ValueError):
+        return None
+    return None if price < 0 else price * 1_000_000
+
+
+def money(value: float | None) -> str:
+    if value is None:
+        return "var"
+    if value == 0:
+        return "0"
+    return f"{value:.2f}" if value >= 0.01 else f"{value:.4f}".rstrip("0")
+
+
+def is_free(model: dict) -> bool:
+    pricing = model.get("pricing") or {}
+    prompt, completion = per_million(pricing.get("prompt")), per_million(pricing.get("completion"))
+    return model.get("id", "").endswith(":free") or (prompt == 0 and completion == 0)
+
+
+def model_rows(models: list[dict], term: str | None) -> list[list[str]]:
+    rows = []
+    needle = (term or "").casefold()
+    for model in sorted(models, key=lambda item: item.get("id", "")):
+        if needle and needle not in model.get("id", "").casefold() and needle not in model.get("name", "").casefold():
+            continue
+        pricing = model.get("pricing") or {}
+        rows.append(
+            [
+                model.get("id", "?"),
+                f"{model.get('context_length') or 0:,}",
+                money(per_million(pricing.get("prompt"))),
+                money(per_million(pricing.get("completion"))),
+                "free" if is_free(model) else "",
+            ]
+        )
+    return rows
+
+
+def table(header: list[str], rows: list[list[str]]) -> str:
+    widths = [max(len(row[i]) for row in [header, *rows]) for i in range(len(header))]
+    right = {1, 2, 3}
+
+    def line(row: list[str]) -> str:
+        cells = [cell.rjust(widths[i]) if i in right else cell.ljust(widths[i]) for i, cell in enumerate(row)]
+        return "  ".join(cells).rstrip()
+
+    return "\n".join([line(header), *(line(row) for row in rows)])
+
+
+def usage_line(model: str, usage: dict, seconds: float) -> str:
+    prompt = usage.get("prompt_tokens", "?")
+    completion = usage.get("completion_tokens", "?")
+    cost = usage.get("cost")
+    cost_text = f"${cost:.6f}".rstrip("0").rstrip(".") if isinstance(cost, (int, float)) else "unknown"
+    if cost == 0:
+        cost_text = "$0"
+    return f"{model}: {prompt} prompt + {completion} completion tokens, cost {cost_text}, {seconds:.1f}s"
+
+
+def side_by_side(left: str, right: str, width: int) -> str:
+    column = max(20, (width - 3) // 2)
+
+    def wrap(text: str) -> list[str]:
+        lines: list[str] = []
+        for paragraph in text.splitlines() or [""]:
+            lines.extend(textwrap.wrap(paragraph, column, replace_whitespace=False, drop_whitespace=True) or [""])
+        return lines
+
+    a, b = wrap(left), wrap(right)
+    a += [""] * (len(b) - len(a))
+    b += [""] * (len(a) - len(b))
+    return "\n".join(f"{x.ljust(column)} | {y}".rstrip() for x, y in zip(a, b))
+
+
+# Commands -------------------------------------------------------------------
+
+
+def read_prompt(value: str) -> str:
+    prompt = sys.stdin.read() if value == "-" else value
+    if not prompt.strip():
+        raise CliError("the prompt is empty")
+    return prompt
+
+
+def cmd_list(args) -> int:
+    rows = model_rows(fetch_models(), args.filter)
+    if not rows:
+        raise CliError(f"no model matches {args.filter!r}")
+    print(table(["id", "context", "$/M in", "$/M out", "free"], rows))
+    print(f"{len(rows)} models. Prices are USD per million tokens.", file=sys.stderr)
+    return 0
+
+
+def cmd_ask(args) -> int:
+    key = api_key()
+    prompt = read_prompt(args.prompt)
+    started = time.monotonic()
+    ended_with_newline = [True]
+
+    def write(text: str) -> None:
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        ended_with_newline[0] = text.endswith("\n")
+
+    usage = stream_chat(key, args.model, prompt, args.max_tokens, write)
+    if not ended_with_newline[0]:
+        sys.stdout.write("\n")
+    sys.stdout.flush()
+    print(usage_line(args.model, usage, time.monotonic() - started), file=sys.stderr)
+    return 0
+
+
+def cmd_compare(args) -> int:
+    key = api_key()
+    prompt = read_prompt(args.prompt)
+    models = [args.model_a, args.model_b]
+    results: dict[str, dict] = {model: {"text": [], "usage": {}, "error": None, "seconds": 0.0} for model in models}
+
+    def run(model: str) -> None:
+        result = results[model]
+        started = time.monotonic()
+        try:
+            result["usage"] = stream_chat(key, model, prompt, args.max_tokens, result["text"].append)
+        except CliError as error:
+            result["error"] = str(error)
+        result["seconds"] = time.monotonic() - started
+
+    threads = [threading.Thread(target=run, args=(model,)) for model in models]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    def body(model: str) -> str:
+        result = results[model]
+        return f"ERROR: {result['error']}" if result["error"] else "".join(result["text"]).strip()
+
+    width = args.width or shutil.get_terminal_size((160, 24)).columns
+    column = max(20, (width - 3) // 2)
+    print(side_by_side(models[0], models[1], width))
+    print(f"{'-' * column}-+-{'-' * column}")
+    print(side_by_side(body(models[0]), body(models[1]), width))
+    for model in models:
+        if not results[model]["error"]:
+            print(usage_line(model, results[model]["usage"], results[model]["seconds"]), file=sys.stderr)
+    return 1 if any(results[model]["error"] for model in models) else 0
+
+
+def launch_commands(model: str) -> dict[str, str]:
+    q = shlex.quote
+    root = base_url()
+    anthropic_root = root[: -len("/v1")] if root.endswith("/v1") else root
+    provider = (
+        'model_providers.openrouter={name="OpenRouter",'
+        f'base_url="{root}",env_key="{KEY_VAR}",wire_api="responses"}}'
+    )
+    return {
+        "claude": (
+            f"ANTHROPIC_BASE_URL={q(anthropic_root)} ANTHROPIC_AUTH_TOKEN=\"${KEY_VAR}\" "
+            f"ANTHROPIC_API_KEY= claude --model {q(model)}"
+        ),
+        "codex": f"codex -c model_provider=openrouter -c {q(provider)} -m {q(model)}",
+        "env": f"export OPENAI_BASE_URL={q(root)} OPENAI_API_KEY=\"${KEY_VAR}\"",
+    }
+
+
+def cmd_launch(args) -> int:
+    models = {model.get("id"): model for model in fetch_models()}
+    model = models.get(args.model)
+    if model is None:
+        close = [name for name in sorted(models) if args.model.casefold() in name.casefold()][:5]
+        hint = f" Close matches: {', '.join(close)}." if close else " Run: openrouter list <filter>."
+        raise CliError(f"unknown model {args.model!r}.{hint}")
+    commands = launch_commands(args.model)
+    labels = {
+        "claude": "Claude Code",
+        "codex": "Codex CLI",
+        "env": f"Other OpenAI-compatible tools: set these, then choose the model {args.model}",
+    }
+    if args.tool:
+        print(commands[args.tool])
+    else:
+        print("\n\n".join(f"# {labels[tool]}\n{commands[tool]}" for tool in TOOLS))
+    if "tools" not in (model.get("supported_parameters") or []):
+        print(f"warning: {args.model} does not list tool calling. A coding agent may fail on it.", file=sys.stderr)
+    if not os.environ.get(KEY_VAR):
+        print(f"note: export {KEY_VAR} in the shell before you run the command.", file=sys.stderr)
+    return 0
+
+
+# CLI ------------------------------------------------------------------------
+
+
+def parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(
+        prog="openrouter", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    commands = root.add_subparsers(dest="command", required=True)
+
+    list_parser = commands.add_parser("list", help="show models and prices (no credit)")
+    list_parser.add_argument("filter", nargs="?", help="case-insensitive text to match in the id or name")
+    list_parser.set_defaults(run=cmd_list)
+
+    ask_parser = commands.add_parser("ask", help="stream one reply (spends credit)")
+    ask_parser.add_argument("model")
+    ask_parser.add_argument("prompt", help='the prompt, or "-" to read standard input')
+    ask_parser.add_argument("--max-tokens", type=int, help="limit the reply length and the cost")
+    ask_parser.set_defaults(run=cmd_ask)
+
+    compare_parser = commands.add_parser("compare", help="one prompt, two models, side by side (spends credit)")
+    compare_parser.add_argument("model_a")
+    compare_parser.add_argument("model_b")
+    compare_parser.add_argument("prompt", help='the prompt, or "-" to read standard input')
+    compare_parser.add_argument("--max-tokens", type=int, help="limit each reply length and the cost")
+    compare_parser.add_argument("--width", type=int, help="total output width (default: terminal width)")
+    compare_parser.set_defaults(run=cmd_compare)
+
+    launch_parser = commands.add_parser("launch", help="print the command for a coding session (no credit)")
+    launch_parser.add_argument("model")
+    launch_parser.add_argument("--tool", choices=TOOLS, help="print only the command for this tool")
+    launch_parser.set_defaults(run=cmd_launch)
+    return root
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parser().parse_args(argv)
+    try:
+        return args.run(args)
+    except CliError as error:
+        print(f"openrouter: {error}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())
