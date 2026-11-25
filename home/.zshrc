@@ -122,8 +122,7 @@ alias cc='claude --dangerously-skip-permissions'
 alias co='codex --sandbox workspace-write --ask-for-approval never'
 
 # FirstMate fleet env (any cwd); see also ~/.zprofile hook from install.sh
-_DOTFILES_KARAN="${DOTFILES_KARAN:-$HOME/.dotfiles-karan}"
-[ -f "$_DOTFILES_KARAN/home/firstmate-env.zsh" ] && source "$_DOTFILES_KARAN/home/firstmate-env.zsh"
+[ -f "$HOME/.config/firstmate/env.zsh" ] && source "$HOME/.config/firstmate/env.zsh"
 
 # fm: FirstMate entry point. Works from WezTerm, Ghostty, or cmux.
 fm() {

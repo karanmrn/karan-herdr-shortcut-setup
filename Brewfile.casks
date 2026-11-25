@@ -1,10 +1,9 @@
-cmux
-codexbar
-font-hack-nerd-font
-gcloud-cli
-google-cloud-sdk
-goplaces
-lm-studio
-opensuperwhisper
-t3-code
-xurl
+cask "android-commandlinetools"
+cask "claude-code@latest"
+cask "font-hack-nerd-font"
+cask "font-jetbrains-mono-nerd-font"
+cask "gcloud-cli"
+cask "google-chrome"
+cask "lm-studio"
+cask "opensuperwhisper"
+cask "wezterm"

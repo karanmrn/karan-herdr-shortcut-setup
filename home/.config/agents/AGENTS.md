@@ -1,6 +1,8 @@
 # Global agent instructions
 
-Shared by Claude Code, Codex, opencode, and grok via symlink.
+Shared by Codex, opencode, and grok via symlink. Claude Code keeps its own
+`~/.claude/CLAUDE.md` because it also holds Claude-only skill routing, but the
+engineering standards below are mirrored there.
 
 Source of truth: `~/.dotfiles-karan/home/.config/agents/AGENTS.md`
 
@@ -40,6 +42,15 @@ Source of truth: `~/.dotfiles-karan/home/.config/agents/AGENTS.md`
 - Before using dynamic workflows, ultra code, or any feature that immediately
   spawns a large swarm of subagents, explain the tradeoffs and ask for explicit
   approval.
+
+## Council members
+
+- When the `council` skill runs, the three members are Claude Opus, GPT Sol and
+  Devin SWE-2 Max. Use Devin in place of Gemini.
+- Run the Devin member non-interactively:
+  `devin --print --model swe-2-max --permission-mode auto -- "<prompt>"`.
+- Devin refuses untrusted folders. If it refuses, report that the folder needs
+  one interactive `devin` start to trust it. Do not substitute another model.
 
 ---
 

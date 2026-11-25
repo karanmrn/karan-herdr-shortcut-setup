@@ -1,7 +1,9 @@
 """Exercise native zsh startup and installation in disposable homes."""
 
 from pathlib import Path
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -11,7 +13,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 class AgentGlobsTest(unittest.TestCase):
     def setUp(self):
-        self.scratch = tempfile.TemporaryDirectory(prefix="agent-globs-", dir=REPO)
+        self.scratch = tempfile.TemporaryDirectory(prefix="agent-globs-")
         self.addCleanup(self.scratch.cleanup)
         self.home = Path(self.scratch.name)
         source = REPO / "home/.zshenv"
@@ -142,6 +144,33 @@ class AgentGlobsTest(unittest.TestCase):
         self.assertEqual(dest.lstat().st_ino, inode)
         self.assertEqual(list(self.home.glob(".zshenv.pre-dotfiles-*")), [])
 
+    def test_firstmate_login_environment_works_outside_default_clone(self):
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        command = '. "$HOME/.zprofile"; printf "%s\\n" "$FM_WORKSPACE" "$FM_BACKEND"'
+        result = self.shell(command)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, f"{self.home}/karan-agent-workspace\nherdr\n")
+        self.assertEqual((self.home / ".zprofile").read_text().count("# firstmate portable env"), 1)
+
+    def test_openrouter_skill_is_shared_and_executable(self):
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        shared = self.home / ".agents/skills/openrouter"
+        claude = self.home / ".claude/skills/openrouter"
+        self.assertTrue((shared / "scripts/openrouter").is_file())
+        self.assertEqual(claude.resolve(), shared.resolve())
+        self.assertTrue(os.access(shared / "scripts/openrouter", os.X_OK))
+        result = subprocess.run(
+            [sys.executable, str(shared / "scripts/openrouter"), "--help"],
+            env={"HOME": str(self.home), "PATH": "/usr/bin:/bin"},
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("launch", result.stdout)
+
     def test_installer_links_published_claude_skills(self):
         for name in ["desktop-agent-workflows", "openrouter"]:
             with self.subTest(skill=name):
@@ -156,7 +185,11 @@ class AgentGlobsTest(unittest.TestCase):
         for name in ["desktop-agent-workflows", "openrouter"]:
             with self.subTest(skill=name):
                 dest = self.home / ".claude/skills" / name
-                self.assertEqual(dest.readlink(), REPO / "home/.claude/skills" / name)
+                self.assertEqual(
+                    dest.readlink(),
+                    self.home / ".agents/skills/openrouter" if name == "openrouter"
+                    else REPO / "home/.claude/skills" / name,
+                )
                 self.assertTrue((dest / "SKILL.md").is_file())
                 self.assertIn(f"ok     .claude/skills/{name}", result.stdout)
                 backups = list(dest.parent.glob(name + ".pre-dotfiles-*"))

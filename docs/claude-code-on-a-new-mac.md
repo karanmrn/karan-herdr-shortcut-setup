@@ -93,21 +93,23 @@ links:
 | `~/.config/agents/AGENTS.md` | `home/.config/agents/AGENTS.md` |
 | `~/.claude/statusline.sh` | `home/.claude/statusline.sh` |
 | `~/.claude/skills/desktop-agent-workflows` | `home/.claude/skills/desktop-agent-workflows` |
-| `~/.claude/skills/openrouter` | `home/.claude/skills/openrouter` |
+| `~/.agents/skills/openrouter` | `home/.claude/skills/openrouter` |
+| `~/.claude/skills/openrouter` | `~/.agents/skills/openrouter` |
 | `~/.cursor/rules/jev-review.mdc` | `home/.cursor/rules/jev-review.mdc` |
 | `~/.local/bin/openrouter` | `home/.local/bin/openrouter` |
 | `~/.zshrc`, `~/.zshenv` | `home/.zshrc`, `home/.zshenv` |
 
-One file, `AGENTS.md`, gives Claude Code, Codex, opencode and grok the same
-engineering rules. Edit it once and every harness reads the change.
+The installer links the same `AGENTS.md` to all four instruction paths. The live
+file says Claude Code has separate instructions, but the observed Studio link
+points to this shared file. Review Claude-only routing after installation.
 
-The `openrouter` links come from an older setup that used the local proxy.
-On the main Mac, `~/.claude/skills/openrouter` now points to the kstack copy in
-`~/.agents/skills/openrouter`. See [section 7](#7-models).
+The installer links the live OpenRouter skill into `~/.agents/skills/openrouter`.
+The Claude skill link points to that shared copy. The separate `openrouter`
+command on PATH is an older proxy launcher. See [section 7](#7-models).
 
 `install.sh` also adds one hook line to `~/.zprofile`. That line loads
 `home/firstmate-env.zsh`, which sets `FM_WORKSPACE`, `FM_HOME` and `FM_BACKEND`.
-The hook expects the repo at `~/.dotfiles-karan`. Clone it there.
+The hook sources `~/.config/firstmate/env.zsh`, which the installer links to the checkout.
 
 `install.sh` does not write `~/.claude/settings.json`. Section 5 tells you what
 to set by hand.

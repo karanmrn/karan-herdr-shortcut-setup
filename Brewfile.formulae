@@ -1,26 +1,30 @@
-antoniorodr/memo/memo
-astro
-cask
-cliproxyapi
-duckdb
-gh
-git
-harfbuzz
-jupyterlab
-mas
-neovim
-openclaw/tap/wacli
-pipx
-pkgconf
-pnpm
-poppler
-python@3.12
-ripgrep
-starship
-tmux
-wget
-withgraphite/tap/graphite
-yarn
-yt-dlp
-zsh-autosuggestions
-zsh-syntax-highlighting
+brew "ast-grep"
+brew "azure-cli"
+brew "bash"
+brew "certifi"
+brew "colima"
+brew "coreutils"
+brew "docker"
+brew "ffmpeg"
+brew "ffmpeg-full"
+brew "gh"
+brew "gitleaks"
+brew "herdr"
+brew "node"
+brew "openjdk@21"
+brew "osmium-tool"
+brew "osv-scanner"
+brew "postgresql@16"
+brew "postgrest"
+brew "python-packaging"
+brew "rustup"
+brew "semgrep"
+brew "shellcheck"
+brew "starship"
+brew "switchaudio-osx"
+brew "tmux"
+brew "uv"
+brew "zizmor"
+brew "zsh-autosuggestions"
+brew "zsh-syntax-highlighting"
+brew "supabase/tap/supabase", trusted: true
